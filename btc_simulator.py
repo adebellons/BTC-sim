@@ -10,6 +10,7 @@ st.sidebar.header("Simulation Settings")
 starting_btc = st.sidebar.number_input("Initial BTC Balance", value=1.0, step=0.1)
 starting_price = st.sidebar.number_input("Initial BTC Price (USD)", value=30000, step=1000)
 ltv_ratio = st.sidebar.slider("Loan-to-Value Ratio (%)", min_value=10, max_value=90, value=50) / 100
+liquidation_ltv = st.sidebar.slider("Liquidation LTV Threshold (%)", min_value=50, max_value=100, value=85)
 loan_interest_rate = st.sidebar.slider("Loan Interest Rate (Annual %)", min_value=1, max_value=15, value=6) / 100
 monthly_dca_usd = st.sidebar.number_input("Monthly DCA Amount (USD)", value=500, step=50)
 monthly_income_draw = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=1000, step=100)
