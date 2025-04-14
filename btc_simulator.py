@@ -68,3 +68,4 @@ st.metric("Total BTC Holdings", f"{btc_holdings:.4f} BTC")
 st.metric("Loan Balance", f"${loan_balance:,.2f}")
 st.metric("Collateral Value", f"${btc_holdings * btc_prices[-1]:,.2f}")
 st.metric("Equity", f"${btc_holdings * btc_prices[-1] - loan_balance:,.2f}")
+Added live BTC price option and liquidation LTV threshold
