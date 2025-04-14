@@ -1,6 +1,7 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
+import requests
 
 st.set_page_config(page_title="BTC-Backed Loan Simulator", layout="wide")
 st.title("🚀 Bitcoin Wealth Leverage Simulator")
@@ -8,7 +9,20 @@ st.title("🚀 Bitcoin Wealth Leverage Simulator")
 # --- Sidebar Inputs ---
 st.sidebar.header("Simulation Settings")
 starting_btc = st.sidebar.number_input("Initial BTC Balance", value=1.0, step=0.1)
-starting_price = st.sidebar.number_input("Initial BTC Price (USD)", value=30000, step=1000)
+
+use_live_price = st.sidebar.checkbox("Use Live BTC Price", value=False)
+
+if use_live_price:
+    try:
+        response = requests.get("https://api.coindesk.com/v1/bpi/currentprice/BTC.json")
+        response.raise_for_status()
+        starting_price = response.json()["bpi"]["USD"]["rate_float"]
+        st.sidebar.write(f"📈 Live BTC Price: ${starting_price:,.2f}")
+    except Exception as e:
+        st.sidebar.error("⚠️ Failed to fetch live BTC price.")
+else:
+    starting_price = st.sidebar.number_input("Initial BTC Price (USD)", value=30000, step=1000)
+
 ltv_ratio = st.sidebar.slider("Loan-to-Value Ratio (%)", min_value=10, max_value=90, value=50) / 100
 liquidation_ltv = st.sidebar.slider("Liquidation LTV Threshold (%)", min_value=50, max_value=100, value=85)
 loan_interest_rate = st.sidebar.slider("Loan Interest Rate (Annual %)", min_value=1, max_value=15, value=6) / 100
