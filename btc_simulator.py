@@ -8,6 +8,13 @@ st.title("🚀 Bitcoin Wealth Leverage Simulator")
 
 # --- Sidebar Inputs ---
 st.sidebar.header("Simulation Settings")
+
+simulation_mode = st.radio(
+    "Choose Simulation Mode",
+    ["Standard Loan", "DCA as Independent Loans"],
+    index=0,
+    horizontal=True
+)
 starting_btc = st.sidebar.number_input("Initial BTC Balance", value=1.0, step=0.1)
 
 use_live_price = st.sidebar.checkbox("Use Live BTC Price", value=False)
@@ -49,12 +56,23 @@ btc_collateral_value = []
 loan_balances = []
 available_equity = []
 
+separate_loans = []  # For tracking independent loans if needed
+
 for month in range(simulation_months):
     price = btc_prices[month]
     btc_dca = monthly_dca_usd / price
     btc_holdings += btc_dca
-    loan_balance *= (1 + loan_interest_rate / 12)
-    loan_balance += monthly_income_draw
+
+    if simulation_mode == "Standard Loan":
+        loan_balance *= (1 + loan_interest_rate / 12)
+        loan_balance += monthly_income_draw
+    else:  # DCA as Independent Loans
+        # Add new loan based on DCA BTC value
+        new_loan = btc_dca * price * ltv_ratio
+        separate_loans.append(new_loan)
+        separate_loans = [loan * (1 + loan_interest_rate / 12) for loan in separate_loans]
+        separate_loans = [loan + (monthly_income_draw / len(separate_loans)) for loan in separate_loans] if separate_loans else []
+        loan_balance = sum(separate_loans)
 
     total_collateral_value = btc_holdings * price
     equity = total_collateral_value - loan_balance
@@ -63,7 +81,7 @@ for month in range(simulation_months):
     loan_balances.append(loan_balance)
     available_equity.append(equity)
 
-# --- Display Charts ---
+
 months = np.arange(simulation_months)
 fig, ax = plt.subplots(figsize=(12, 6))
 ax.plot(months, btc_collateral_value, label='BTC Collateral Value')
