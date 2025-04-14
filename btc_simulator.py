@@ -13,13 +13,14 @@ starting_btc = st.sidebar.number_input("Initial BTC Balance", value=1.0, step=0.
 use_live_price = st.sidebar.checkbox("Use Live BTC Price", value=False)
 
 if use_live_price:
+    starting_price = 30000  # default fallback
     try:
         response = requests.get("https://api.coindesk.com/v1/bpi/currentprice/BTC.json")
         response.raise_for_status()
         starting_price = response.json()["bpi"]["USD"]["rate_float"]
         st.sidebar.write(f"📈 Live BTC Price: ${starting_price:,.2f}")
     except Exception as e:
-        st.sidebar.error("⚠️ Failed to fetch live BTC price.")
+        st.sidebar.error("⚠️ Failed to fetch live BTC price. Using default.")
 else:
     starting_price = st.sidebar.number_input("Initial BTC Price (USD)", value=30000, step=1000)
 
