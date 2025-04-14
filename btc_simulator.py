@@ -29,7 +29,6 @@ loan_interest_rate = st.sidebar.slider("Loan Interest Rate (Annual %)", min_valu
 monthly_dca_usd = st.sidebar.number_input("Monthly DCA Amount (USD)", value=500, step=50)
 monthly_income_draw = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=1000, step=100)
 simulation_months = st.sidebar.slider("Simulation Length (Months)", 12, 60, 36)  # Changed from years to months
-simulation_months = simulation_years * 12
 
 # Simulate BTC price using a geometric growth model
 def simulate_btc_price(months, start_price, annual_growth=0.1, volatility=0.2):
