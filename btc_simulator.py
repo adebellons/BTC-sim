@@ -28,7 +28,7 @@ liquidation_ltv = st.sidebar.slider("Liquidation LTV Threshold (%)", min_value=5
 loan_interest_rate = st.sidebar.slider("Loan Interest Rate (Annual %)", min_value=1, max_value=15, value=6) / 100
 monthly_dca_usd = st.sidebar.number_input("Monthly DCA Amount (USD)", value=500, step=50)
 monthly_income_draw = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=1000, step=100)
-simulation_years = st.sidebar.slider("Simulation Length (Years)", 1, 30, 10)
+simulation_months = st.sidebar.slider("Simulation Length (Months)", 12, 60, 36)  # Changed from years to months
 simulation_months = simulation_years * 12
 
 # Simulate BTC price using a geometric growth model
