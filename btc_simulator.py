@@ -9,6 +9,10 @@ st.title("🚀 Bitcoin Wealth Leverage Simulator")
 # --- Sidebar Inputs ---
 st.sidebar.header("Simulation Settings")
 
+# New BTC price simulation parameters
+btc_annual_growth = st.sidebar.slider("Expected Annual BTC Growth (%)", min_value=-50, max_value=200, value=10) / 100
+btc_volatility = st.sidebar.slider("BTC Price Volatility (%)", min_value=1, max_value=200, value=20) / 100
+
 simulation_mode = st.radio(
     "Choose Simulation Mode",
     ["Standard Loan", "DCA as Independent Loans"],
@@ -47,7 +51,7 @@ def simulate_btc_price(months, start_price, annual_growth=0.1, volatility=0.2):
         prices.append(prices[-1] * (1 + shock))
     return prices
 
-btc_prices = simulate_btc_price(simulation_months, starting_price)
+btc_prices = simulate_btc_price(simulation_months, starting_price, annual_growth=btc_annual_growth, volatility=btc_volatility)
 
 # --- Simulation Logic ---
 btc_holdings = starting_btc
@@ -93,6 +97,15 @@ ax.set_ylabel('USD')
 ax.legend()
 ax.grid(True)
 st.pyplot(fig)
+
+# --- BTC Price Chart ---
+fig2, ax2 = plt.subplots(figsize=(12, 4))
+ax2.plot(months, btc_prices, label='BTC Price', color='orange')
+ax2.set_title('Simulated BTC Price Over Time')
+ax2.set_xlabel('Months')
+ax2.set_ylabel('Price (USD)')
+ax2.grid(True)
+st.pyplot(fig2)
 
 # --- Key Metrics ---
 st.subheader("📊 Final Metrics")
