@@ -9,6 +9,9 @@ st.title("🚀 Bitcoin Wealth Leverage Simulator")
 # --- Sidebar Inputs ---
 st.sidebar.header("Simulation Settings")
 
+# BTC price model selection
+btc_price_mode = st.sidebar.radio("BTC Price Model", ["Simulated", "Flat Growth", "Historical"], index=0)
+
 # New BTC price simulation parameters
 btc_annual_growth = st.sidebar.slider("Expected Annual BTC Growth (%)", min_value=-50, max_value=200, value=10) / 100
 btc_volatility = st.sidebar.slider("BTC Price Volatility (%)", min_value=1, max_value=200, value=20) / 100
@@ -51,7 +54,13 @@ def simulate_btc_price(months, start_price, annual_growth=0.1, volatility=0.2):
         prices.append(prices[-1] * (1 + shock))
     return prices
 
-btc_prices = simulate_btc_price(simulation_months, starting_price, annual_growth=btc_annual_growth, volatility=btc_volatility)
+if btc_price_mode == "Simulated":
+    btc_prices = simulate_btc_price(simulation_months, starting_price, annual_growth=btc_annual_growth, volatility=btc_volatility)
+elif btc_price_mode == "Flat Growth":
+    monthly_growth = (1 + btc_annual_growth) ** (1/12) - 1
+    btc_prices = [starting_price * (1 + monthly_growth) ** i for i in range(simulation_months)]
+else:  # Historical
+    btc_prices = [starting_price for _ in range(simulation_months)]  # Placeholder for actual historical integration
 
 # --- Simulation Logic ---
 btc_holdings = starting_btc
