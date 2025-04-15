@@ -2,6 +2,7 @@ import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
 import requests
+import pandas as pd
 
 st.set_page_config(page_title="BTC-Backed Loan Simulator", layout="wide")
 st.title("🚀 Bitcoin Wealth Leverage Simulator")
@@ -43,7 +44,7 @@ liquidation_ltv = st.sidebar.slider("Liquidation LTV Threshold (%)", min_value=5
 loan_interest_rate = st.sidebar.slider("Loan Interest Rate (Annual %)", min_value=1.00, max_value=15.00, value=6.00, step=0.01) / 100
 monthly_dca_usd = st.sidebar.number_input("Monthly DCA Amount (USD)", value=500, step=50)
 monthly_income_draw = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=1000, step=100)
-simulation_months = st.sidebar.slider("Simulation Length (Months)", 12, 60, 36)  # Changed from years to months
+simulation_months = st.sidebar.slider("Simulation Length (Months)", 12, 60, 36)
 
 # Simulate BTC price using a geometric growth model
 def simulate_btc_price(months, start_price, annual_growth=0.1, volatility=0.2):
@@ -59,8 +60,8 @@ if btc_price_mode == "Simulated":
 elif btc_price_mode == "Flat Growth":
     monthly_growth = (1 + btc_annual_growth) ** (1/12) - 1
     btc_prices = [starting_price * (1 + monthly_growth) ** i for i in range(simulation_months)]
-else:  # Historical
-    btc_prices = [starting_price for _ in range(simulation_months)]  # Placeholder for actual historical integration
+else:
+    btc_prices = [starting_price for _ in range(simulation_months)]
 
 # --- Simulation Logic ---
 btc_holdings = starting_btc
@@ -71,8 +72,9 @@ available_equity = []
 loan_numbers = []
 month_of_loan = []
 
-separate_loans = []  # For tracking independent loans if needed
+separate_loans = []
 separate_loan_ages = []
+separate_loan_start_months = []
 
 for month in range(simulation_months):
     price = btc_prices[month]
@@ -84,12 +86,13 @@ for month in range(simulation_months):
         loan_balance += monthly_income_draw
         loan_numbers.append(1)
         month_of_loan.append(month + 1)
-    else:  # DCA as Independent Loans
+    else:
         new_loan = btc_dca * price * ltv_ratio
-        separate_loans.append(new_loan)
-        separate_loan_ages = [age + 1 for age in separate_loan_ages] + [1]  # New loan is age 1
         separate_loans = [loan * (1 + loan_interest_rate / 12) for loan in separate_loans]
         separate_loans = [loan + (monthly_income_draw / len(separate_loans)) for loan in separate_loans] if separate_loans else []
+        separate_loans.append(new_loan)
+        separate_loan_start_months.append(month + 1)
+        separate_loan_ages = [age + 1 for age in separate_loan_ages] + [1]
         loan_balance = sum(separate_loans)
         loan_numbers.append(month + 1)
         month_of_loan.append(separate_loan_ages[-1])
@@ -101,23 +104,15 @@ for month in range(simulation_months):
     loan_balances.append(loan_balance)
     available_equity.append(equity)
 
-
-months = np.arange(simulation_months)
-# Display data as a table instead of chart
-import pandas as pd
-
 btc_holdings_over_time = [starting_btc + sum(monthly_dca_usd / btc_prices[i] for i in range(m+1)) for m in range(simulation_months)]
 loan_principal = starting_price * starting_btc * ltv_ratio
-
 interest_accrued = [loan_balances[i] - (loan_principal + (monthly_income_draw * (i+1))) for i in range(simulation_months)]
-
 ltv_percentages = [(loan_balances[i] / btc_collateral_value[i]) * 100 if btc_collateral_value[i] > 0 else 0 for i in range(simulation_months)]
-
 liquidation_risks = ["Yes" if ltv_percentages[i] >= liquidation_ltv else "No" for i in range(simulation_months)]
 
-
+# Main Summary Table
 data = pd.DataFrame({
-    'Month': months + 1,
+    'Month': np.arange(simulation_months) + 1,
     'Loan #': loan_numbers,
     'Month of Loan': month_of_loan,
     'BTC Price (USD)': [f"${p:,.2f}" for p in btc_prices],
@@ -134,9 +129,21 @@ data = pd.DataFrame({
 st.subheader("🗅️ Monthly Breakdown")
 st.dataframe(data, use_container_width=True)
 
+# --- Detailed DCA Loans Table ---
+if simulation_mode == "DCA as Independent Loans":
+    st.subheader("📋 Independent DCA Loans")
+    dca_loan_data = pd.DataFrame({
+        "Loan Start Month": separate_loan_start_months,
+        "Loan Age (Months)": separate_loan_ages,
+        "Current Loan Balance": [f"${l:,.2f}" for l in separate_loans],
+        "Estimated LTV %": [f"{(separate_loans[i] / (btc_prices[-1] * monthly_dca_usd / btc_prices[separate_loan_start_months[i]-1])) * 100:.2f}%" if (btc_prices[-1] > 0) else "-" for i in range(len(separate_loans))],
+        "Liquidation Risk": ["Yes" if (separate_loans[i] / (btc_prices[-1] * monthly_dca_usd / btc_prices[separate_loan_start_months[i]-1])) * 100 >= liquidation_ltv else "No" for i in range(len(separate_loans))]
+    })
+    st.dataframe(dca_loan_data, use_container_width=True)
+
 # --- BTC Price Chart ---
 fig2, ax2 = plt.subplots(figsize=(12, 4))
-ax2.plot(months, btc_prices, label='BTC Price', color='orange')
+ax2.plot(np.arange(simulation_months), btc_prices, label='BTC Price', color='orange')
 ax2.set_title('Simulated BTC Price Over Time')
 ax2.set_xlabel('Months')
 ax2.set_ylabel('Price (USD)')
