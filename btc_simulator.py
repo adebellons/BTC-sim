@@ -102,9 +102,14 @@ import pandas as pd
 data = pd.DataFrame({
     'Month': months + 1,
     'BTC Price (USD)': [f"${p:,.2f}" for p in btc_prices],
+    'BTC Holdings': [f"{h:.6f}" for h in [starting_btc + sum(monthly_dca_usd / btc_prices[i] for i in range(m+1)) for m in range(simulation_months)]],
     'BTC Collateral Value': [f"${v:,.2f}" for v in btc_collateral_value],
-    'Loan Balance': [f"${v:,.2f}" for v in loan_balances],
-    'Available Equity': [f"${v:,.2f}" for v in available_equity]
+    'Loan Principal': [f"${starting_price * starting_btc * ltv_ratio:,.2f}" for _ in range(simulation_months)],
+    'Interest Accrued': [f"${loan_balances[i] - (starting_price * starting_btc * ltv_ratio + (monthly_income_draw * (i+1))):,.2f}" for i in range(simulation_months)],
+    'Total Owed': [f"${v:,.2f}" for v in loan_balances],
+    'Available Equity': [f"${v:,.2f}" for v in available_equity],
+    'LTV %': [f"{(loan_balances[i] / btc_collateral_value[i]) * 100:.2f}%" if btc_collateral_value[i] > 0 else "N/A" for i in range(simulation_months)],
+    'Liquidation Risk': ["Yes" if (loan_balances[i] / btc_collateral_value[i]) * 100 >= liquidation_ltv else "No" for i in range(simulation_months)]
 })
 
 st.subheader("📅 Monthly Breakdown")
