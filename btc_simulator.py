@@ -116,6 +116,8 @@ liquidation_risks = ["Yes" if ltv_percentages[i] >= liquidation_ltv else "No" fo
 
 data = pd.DataFrame({
     'Month': months + 1,
+    'Loan #': loan_numbers,
+    'Month of Loan': month_of_loan,
     'BTC Price (USD)': [f"${p:,.2f}" for p in btc_prices],
     'BTC Holdings': [f"{h:.6f}" for h in btc_holdings_over_time],
     'BTC Collateral Value': [f"${v:,.2f}" for v in btc_collateral_value],
@@ -124,12 +126,10 @@ data = pd.DataFrame({
     'Total Owed': [f"${v:,.2f}" for v in loan_balances],
     'Available Equity': [f"${v:,.2f}" for v in available_equity],
     'LTV %': [f"{ltv:.2f}%" for ltv in ltv_percentages],
-    'Liquidation Risk': liquidation_risks,
-    'Loan #': loan_numbers,
-    'Month of Loan': month_of_loan
+    'Liquidation Risk': liquidation_risks
 })
 
-st.subheader("🗕️ Monthly Breakdown")
+st.subheader("🗅️ Monthly Breakdown")
 st.dataframe(data, use_container_width=True)
 
 # --- BTC Price Chart ---
