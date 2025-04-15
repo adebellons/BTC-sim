@@ -71,6 +71,7 @@ loan_balances = []
 available_equity = []
 loan_opened_months = []
 loan_age_months = []
+overall_months = []
 
 independent_loans = []
 
@@ -106,6 +107,7 @@ for month in range(simulation_months):
     btc_collateral_value.append(total_collateral_value)
     loan_balances.append(loan_balance)
     available_equity.append(equity)
+    overall_months.append(month + 1)
 
 btc_holdings_over_time = [starting_btc + sum(monthly_dca_usd / btc_prices[i] for i in range(m+1)) for m in range(simulation_months)]
 loan_principal = starting_price * starting_btc * ltv_ratio
@@ -115,17 +117,16 @@ liquidation_risks = ["Yes" if ltv_percentages[i] >= liquidation_ltv else "No" fo
 
 # Main Summary Table
 data = pd.DataFrame({
-    'Month': np.arange(simulation_months) + 1,
-    'Loan # (Opened)': loan_opened_months,
-    'Month of Loan': loan_age_months,
-    'BTC Price (USD)': [f"${p:,.2f}" for p in btc_prices],
-    'BTC Holdings': [f"{h:.6f}" for h in btc_holdings_over_time],
-    'BTC Collateral Value': [f"${v:,.2f}" for v in btc_collateral_value],
-    'Loan Principal': [f"${loan_principal:,.2f}" for _ in range(simulation_months)],
-    'Interest Accrued': [f"${ia:,.2f}" for ia in interest_accrued],
-    'Total Owed': [f"${v:,.2f}" for v in loan_balances],
-    'Available Equity': [f"${v:,.2f}" for v in available_equity],
-    'LTV %': [f"{ltv:.2f}%" for ltv in ltv_percentages],
+    'Loan # (Opened in Month)': loan_opened_months,
+    'Month of This Loan': loan_age_months,
+    'Overall Month': overall_months,
+    'BTC Price Now': [f"{p:,.2f}" for p in btc_prices],
+    'BTC Collateral': [f"{h:.6f}" for h in btc_holdings_over_time],
+    'Loan Principal': [f"{loan_principal:,.2f}" for _ in range(simulation_months)],
+    'Interest Accrued (Simple)': [f"{ia:,.2f}" for ia in interest_accrued],
+    'Monthly Interest': [f"{(loan_interest_rate / 12) * 100:.2f}" for _ in range(simulation_months)],
+    'Total Owed': [f"{v:,.2f}" for v in loan_balances],
+    'LTV (%)': [f"{ltv:.2f}" for ltv in ltv_percentages],
     'Liquidation Risk': liquidation_risks
 })
 
