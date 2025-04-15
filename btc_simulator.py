@@ -68,6 +68,8 @@ loan_balance = starting_price * starting_btc * ltv_ratio
 btc_collateral_value = []
 loan_balances = []
 available_equity = []
+loan_numbers = []
+month_of_loan = []
 
 separate_loans = []  # For tracking independent loans if needed
 
@@ -79,13 +81,16 @@ for month in range(simulation_months):
     if simulation_mode == "Standard Loan":
         loan_balance *= (1 + loan_interest_rate / 12)
         loan_balance += monthly_income_draw
+        loan_numbers.append(1)
+        month_of_loan.append(month + 1)
     else:  # DCA as Independent Loans
-        # Add new loan based on DCA BTC value
         new_loan = btc_dca * price * ltv_ratio
         separate_loans.append(new_loan)
         separate_loans = [loan * (1 + loan_interest_rate / 12) for loan in separate_loans]
         separate_loans = [loan + (monthly_income_draw / len(separate_loans)) for loan in separate_loans] if separate_loans else []
         loan_balance = sum(separate_loans)
+        loan_numbers.append(month + 1)
+        month_of_loan.append(1)
 
     total_collateral_value = btc_holdings * price
     equity = total_collateral_value - loan_balance
@@ -99,20 +104,32 @@ months = np.arange(simulation_months)
 # Display data as a table instead of chart
 import pandas as pd
 
+btc_holdings_over_time = [starting_btc + sum(monthly_dca_usd / btc_prices[i] for i in range(m+1)) for m in range(simulation_months)]
+loan_principal = starting_price * starting_btc * ltv_ratio
+
+interest_accrued = [loan_balances[i] - (loan_principal + (monthly_income_draw * (i+1))) for i in range(simulation_months)]
+
+ltv_percentages = [(loan_balances[i] / btc_collateral_value[i]) * 100 if btc_collateral_value[i] > 0 else 0 for i in range(simulation_months)]
+
+liquidation_risks = ["Yes" if ltv_percentages[i] >= liquidation_ltv else "No" for i in range(simulation_months)]
+
+
 data = pd.DataFrame({
     'Month': months + 1,
     'BTC Price (USD)': [f"${p:,.2f}" for p in btc_prices],
-    'BTC Holdings': [f"{h:.6f}" for h in [starting_btc + sum(monthly_dca_usd / btc_prices[i] for i in range(m+1)) for m in range(simulation_months)]],
+    'BTC Holdings': [f"{h:.6f}" for h in btc_holdings_over_time],
     'BTC Collateral Value': [f"${v:,.2f}" for v in btc_collateral_value],
-    'Loan Principal': [f"${starting_price * starting_btc * ltv_ratio:,.2f}" for _ in range(simulation_months)],
-    'Interest Accrued': [f"${loan_balances[i] - (starting_price * starting_btc * ltv_ratio + (monthly_income_draw * (i+1))):,.2f}" for i in range(simulation_months)],
+    'Loan Principal': [f"${loan_principal:,.2f}" for _ in range(simulation_months)],
+    'Interest Accrued': [f"${ia:,.2f}" for ia in interest_accrued],
     'Total Owed': [f"${v:,.2f}" for v in loan_balances],
     'Available Equity': [f"${v:,.2f}" for v in available_equity],
-    'LTV %': [f"{(loan_balances[i] / btc_collateral_value[i]) * 100:.2f}%" if btc_collateral_value[i] > 0 else "N/A" for i in range(simulation_months)],
-    'Liquidation Risk': ["Yes" if (loan_balances[i] / btc_collateral_value[i]) * 100 >= liquidation_ltv else "No" for i in range(simulation_months)]
+    'LTV %': [f"{ltv:.2f}%" for ltv in ltv_percentages],
+    'Liquidation Risk': liquidation_risks,
+    'Loan #': loan_numbers,
+    'Month of Loan': month_of_loan
 })
 
-st.subheader("📅 Monthly Breakdown")
+st.subheader("🗕️ Monthly Breakdown")
 st.dataframe(data, use_container_width=True)
 
 # --- BTC Price Chart ---
