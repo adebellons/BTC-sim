@@ -72,6 +72,7 @@ loan_numbers = []
 month_of_loan = []
 
 separate_loans = []  # For tracking independent loans if needed
+separate_loan_ages = []
 
 for month in range(simulation_months):
     price = btc_prices[month]
@@ -86,11 +87,12 @@ for month in range(simulation_months):
     else:  # DCA as Independent Loans
         new_loan = btc_dca * price * ltv_ratio
         separate_loans.append(new_loan)
+        separate_loan_ages = [age + 1 for age in separate_loan_ages] + [1]  # New loan is age 1
         separate_loans = [loan * (1 + loan_interest_rate / 12) for loan in separate_loans]
         separate_loans = [loan + (monthly_income_draw / len(separate_loans)) for loan in separate_loans] if separate_loans else []
         loan_balance = sum(separate_loans)
         loan_numbers.append(month + 1)
-        month_of_loan.append(1)
+        month_of_loan.append(separate_loan_ages[-1])
 
     total_collateral_value = btc_holdings * price
     equity = total_collateral_value - loan_balance
