@@ -40,7 +40,7 @@ else:
 
 ltv_ratio = st.sidebar.slider("Loan-to-Value Ratio (%)", min_value=10, max_value=90, value=50) / 100
 liquidation_ltv = st.sidebar.slider("Liquidation LTV Threshold (%)", min_value=50, max_value=100, value=85)
-loan_interest_rate = st.sidebar.slider("Loan Interest Rate (Annual %)", min_value=1, max_value=15, value=6) / 100
+loan_interest_rate = st.sidebar.slider("Loan Interest Rate (Annual %)", min_value=1.00, max_value=15.00, value=6.00, step=0.01) / 100
 monthly_dca_usd = st.sidebar.number_input("Monthly DCA Amount (USD)", value=500, step=50)
 monthly_income_draw = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=1000, step=100)
 simulation_months = st.sidebar.slider("Simulation Length (Months)", 12, 60, 36)  # Changed from years to months
