@@ -96,16 +96,19 @@ for month in range(simulation_months):
 
 
 months = np.arange(simulation_months)
-fig, ax = plt.subplots(figsize=(12, 6))
-ax.plot(months, btc_collateral_value, label='BTC Collateral Value')
-ax.plot(months, loan_balances, label='Loan Balance')
-ax.plot(months, available_equity, label='Equity')
-ax.set_title('Bitcoin Wealth Leverage Over Time')
-ax.set_xlabel('Months')
-ax.set_ylabel('USD')
-ax.legend()
-ax.grid(True)
-st.pyplot(fig)
+# Display data as a table instead of chart
+import pandas as pd
+
+data = pd.DataFrame({
+    'Month': months + 1,
+    'BTC Price (USD)': [f"${p:,.2f}" for p in btc_prices],
+    'BTC Collateral Value': [f"${v:,.2f}" for v in btc_collateral_value],
+    'Loan Balance': [f"${v:,.2f}" for v in loan_balances],
+    'Available Equity': [f"${v:,.2f}" for v in available_equity]
+})
+
+st.subheader("📅 Monthly Breakdown")
+st.dataframe(data, use_container_width=True)
 
 # --- BTC Price Chart ---
 fig2, ax2 = plt.subplots(figsize=(12, 4))
