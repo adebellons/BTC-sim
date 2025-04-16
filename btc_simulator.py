@@ -3,61 +3,72 @@ import pandas as pd
 import yfinance as yf
 from datetime import datetime
 
-st.title("BTC Loan Leverage Simulator")
+st.set_page_config(page_title="BTC Loan Leverage Simulator", layout="wide")
 
-# --- Inputs ---
-st.sidebar.header("Initial Settings")
+st.title("Bitcoin Loan Leverage Simulator")
+
+# Sidebar inputs
+st.sidebar.header("Simulation Settings")
+
 initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0, step=0.01)
-initial_price = st.sidebar.number_input("Initial BTC Price (USD)", value=50000.0, step=100.0)
-ltv = st.sidebar.slider("Loan-to-Value (LTV %)", min_value=10, max_value=90, value=50)
+ltv_ratio = st.sidebar.slider("Initial LTV (%)", min_value=0, max_value=100, value=50)
 interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0, step=0.1)
-loan_term = st.sidebar.number_input("Loan Term (Months)", value=12, step=1)
-monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=100.0, step=10.0)
+monthly_payment = st.sidebar.number_input("Monthly Loan Payment (USD)", value=0.0, step=10.0)
 min_monthly_payment = st.sidebar.number_input("Minimum Monthly Payment (USD)", value=0.0, step=10.0)
-liq_threshold = st.sidebar.slider("Liquidation Threshold LTV (%)", min_value=50, max_value=100, value=85)
+liq_threshold = st.sidebar.slider("Liquidation LTV Threshold (%)", min_value=0, max_value=100, value=85)
+loan_term_months = st.sidebar.number_input("Loan Term (Months)", value=36, step=1)
+monthly_dca_usd = st.sidebar.number_input("Monthly DCA (USD)", value=0.0, step=10.0)
 
-st.sidebar.header("DCA Settings")
-dca_enabled = st.sidebar.checkbox("Enable DCA", value=False)
-dca_monthly_usd = st.sidebar.number_input("Monthly DCA Amount (USD)", value=100.0, step=10.0)
+# Bitcoin price source
+price_source = st.sidebar.radio("Bitcoin Price Source", ["Historical", "Live"], index=0)
 
-st.sidebar.header("Bitcoin Price Source")
-price_mode = st.sidebar.radio("Use BTC Price Data From:", ("Live", "Historical"))
-if price_mode == "Historical":
-    start_date = st.sidebar.date_input("Start Date", value=datetime(2021, 1, 1))
-    end_date = st.sidebar.date_input("End Date", value=datetime(2022, 1, 1))
-    btc_hist = yf.download("BTC-USD", start=start_date, end=end_date, interval="1mo")
-    btc_prices = btc_hist["Close"].tolist()
+if price_source == "Historical":
+    start_date = st.sidebar.date_input("Start Date", value=datetime(2020, 1, 1))
+    end_date = st.sidebar.date_input("End Date", value=datetime.today())
+    btc_data = yf.download("BTC-USD", start=start_date, end=end_date, progress=False)
+    if btc_data.empty:
+        st.error("No BTC price data available for selected date range.")
+        st.stop()
+    btc_prices = btc_data["Close"].resample("M").last().ffill()
 else:
-    btc_prices = [initial_price * (1 + 0.02 * ((-1) ** i)) for i in range(loan_term)]
+    # Simulate future prices using a simple growth model
+    current_price = yf.download("BTC-USD", period="1d")["Close"].iloc[-1]
+    btc_prices = pd.Series(
+        [current_price * (1 + 0.02) ** i for i in range(loan_term_months + 1)]
+    )
+    btc_prices.index = pd.date_range(datetime.today(), periods=loan_term_months + 1, freq="M")
 
-# --- Run Simulation ---
-if st.button("Run Simulation"):
+# Run Simulation button
+run_sim = st.button("Run Simulation")
+
+if run_sim:
     rows = []
     btc_amount = initial_btc
-    btc_price = btc_prices[0]
-    loan_balance = btc_price * btc_amount * (ltv / 100)
-    total_interest = 0.0
+    price_list = btc_prices.tolist()
 
-    for m in range(loan_term + 1):
-        price_idx = btc_prices[m] if m < len(btc_prices) else btc_prices[-1]
-        btc_value = btc_amount * price_idx
+    # Initial loan amount based on LTV
+    initial_loan = btc_amount * price_list[0] * (ltv_ratio / 100)
+    loan_balance = initial_loan
+    total_interest = 0
 
-        # Interest for this month
-        interest = loan_balance * (interest_rate / 100) / 12 if m > 0 else 0.0
-        total_interest += interest
+    for m in range(len(price_list)):
+        price_idx = price_list[m]
+        btc_value = float(btc_amount * price_idx)
 
-        # Determine monthly payment to apply
-        payment = monthly_payment if m > 0 else 0.0
-        payment = max(payment, min_monthly_payment)
+        # Interest
+        interest = loan_balance * (interest_rate / 100 / 12) if m > 0 else 0
+
+        # Total payment
+        payment = max(monthly_payment, min_monthly_payment) if m > 0 else 0
 
         # Update loan balance
         if m > 0:
-            loan_balance += interest
-            loan_balance -= payment
+            loan_balance += interest - payment
             loan_balance = max(loan_balance, 0.0)
+            total_interest += interest
 
         # current LTV for liquidation
-        curr_ltv = (loan_balance / float(btc_value) * 100) if float(btc_value) > 0 else 0
+        curr_ltv = (loan_balance / btc_value * 100) if btc_value != 0 else 0
         risk = "Yes" if (curr_ltv > liq_threshold and loan_balance > 0) else "No"
 
         rows.append({
@@ -66,13 +77,14 @@ if st.button("Run Simulation"):
             "BTC Value (USD)": btc_value,
             "Loan Balance (USD)": loan_balance,
             "Interest Accrued (Total)": total_interest,
-            "Risk of Liquidation": risk
+            "Monthly Payment": payment,
+            "Current LTV (%)": curr_ltv,
+            "At Risk of Liquidation": risk,
         })
 
-        # Apply DCA
-        if dca_enabled and m > 0:
-            added_btc = dca_monthly_usd / price_idx
-            btc_amount += added_btc
+        # Add new BTC from DCA
+        if monthly_dca_usd > 0:
+            btc_amount += monthly_dca_usd / price_idx
 
     df = pd.DataFrame(rows)
 
@@ -81,5 +93,7 @@ if st.button("Run Simulation"):
         "BTC Price (USD)": "${:,.2f}",
         "BTC Value (USD)": "${:,.2f}",
         "Loan Balance (USD)": "${:,.2f}",
-        "Interest Accrued (Total)": "${:,.2f}"
+        "Interest Accrued (Total)": "${:,.2f}",
+        "Monthly Payment": "${:,.2f}",
+        "Current LTV (%)": "{:.2f}%"
     }))
