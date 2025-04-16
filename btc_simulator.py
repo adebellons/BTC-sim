@@ -96,16 +96,23 @@ if run_simulation:
         btc_price = price_prediction[month]
         btc_balance += monthly_dca
         total_btc_value = btc_balance * btc_price  # Correct BTC value calculation
-        monthly_interest_accrued = loan_amount * monthly_interest
-        total_interest_accrued += monthly_interest_accrued
 
-        # Calculate minimum payment: minimum of interest or monthly payment
-        minimum_payment = max(monthly_interest_accrued, monthly_payment)
-        if loan_amount <= 0:
+        # For month 0, skip interest and payment calculation
+        if month > 0:
+            monthly_interest_accrued = loan_amount * monthly_interest
+            total_interest_accrued += monthly_interest_accrued
+
+            # Calculate minimum payment: minimum of interest or monthly payment
+            minimum_payment = max(monthly_interest_accrued, monthly_payment)
+            if loan_amount <= 0:
+                minimum_payment = 0
+
+            # Calculate the minimum monthly payment (just the interest)
+            min_monthly_payment = monthly_interest_accrued if loan_amount > 0 else 0
+        else:
+            monthly_interest_accrued = 0
             minimum_payment = 0
-
-        # Calculate the minimum monthly payment (just the interest)
-        min_monthly_payment = monthly_interest_accrued if loan_amount > 0 else 0
+            min_monthly_payment = 0
 
         # Calculate loan balance as LTV of the total BTC value
         loan_balance = total_btc_value * (ltv / 100)
