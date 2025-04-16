@@ -117,6 +117,11 @@ if run_simulation:
         # Calculate loan balance as LTV of the total BTC value
         loan_balance = total_btc_value * (ltv / 100)
 
+        # Adjust loan balance based on the minimum monthly payment
+        loan_balance -= minimum_payment  # Reduce the loan balance by the payment amount
+        if loan_balance < 0:
+            loan_balance = 0  # Ensure the loan balance doesn't go negative
+
         if total_btc_value < loan_balance * (ltv_liquidation_percentage / 100):
             liquidation_risk = "Yes"
         else:
@@ -127,7 +132,7 @@ if run_simulation:
             "BTC Price": btc_price,
             "BTC Balance": btc_balance,
             "BTC Value (USD)": total_btc_value,  # Correct BTC value column
-            "Loan Balance (USD)": loan_balance,  # Correct Loan Balance calculation
+            "Loan Balance (USD)": loan_balance,  # Correct Loan Balance calculation reflecting payments
             "Interest Accrued (USD)": total_interest_accrued,
             "Monthly Interest (USD)": monthly_interest_accrued,
             "Monthly Payment (USD)": minimum_payment,
