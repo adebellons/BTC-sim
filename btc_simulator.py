@@ -5,8 +5,8 @@ import yfinance as yf
 st.set_page_config(page_title="BTC Loan Leverage Simulator", layout="wide")
 st.title("BTC Loan Leverage Simulator")
 
-# Loan type selection
-loan_type = st.sidebar.selectbox("Loan Type", ["Standard Loan", "DCA as Independent Loans"])
+# Run simulation button moved to the top
+run_simulation = st.button("Run Simulation")
 
 # Sidebar inputs
 st.sidebar.header("Simulation Inputs")
@@ -34,7 +34,8 @@ monthly_dca_usd = st.sidebar.number_input("Monthly DCA Amount (USD)", value=500.
 monthly_withdrawal = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=500.0)
 monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, min_value=0.0)
 
-run_simulation = st.sidebar.button("Run Simulation")
+# Loan type selection
+loan_type = st.sidebar.selectbox("Loan Type", ["Standard Loan", "DCA as Independent Loans"])
 
 if run_simulation:
     btc_price = initial_price
