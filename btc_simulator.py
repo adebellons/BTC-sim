@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="BTC Sim", layout="wide")
 st.title("BTC Sim")
@@ -74,35 +73,15 @@ if run_simulation:
 
     df = pd.DataFrame(data)
 
-    # Chart
-    st.subheader("Simulation Chart")
-    fig, ax = plt.subplots()
-    ax.plot(df["Month"], df["BTC Value (USD)"], label="BTC Value", color='orange')
-    ax.plot(df["Month"], df["Loan Balance (USD)"], label="Loan Balance", color='red')
-    ax.plot(df["Month"], df["Interest Accrued (USD)"], label="Interest Accrued", color='blue')
-    ax.set_xlabel("Month")
-    ax.set_ylabel("USD")
-    ax.set_title("BTC Value vs Loan vs Interest Accrued")
-    ax.legend()
-    st.pyplot(fig)
-
-    # Liquidation warning
-    if liquidation_triggered:
-        st.warning(f"⚠️ Liquidation risk: BTC value drops below loan in **month {liquidation_month}**.")
-
-    # Final summary
-    st.subheader("Final Summary")
-    st.write(df.tail(1))
-
-    # Table
-    with st.expander("📊 Full Simulation Data"):
-        st.dataframe(df.style.format({
-            "BTC Price": "${:,.2f}",
-            "BTC Value (USD)": "${:,.2f}",
-            "Loan Balance (USD)": "${:,.2f}",
-            "Interest Accrued (USD)": "${:,.2f}",
-            "Minimum Payment (USD)": "${:,.2f}"
-        }))
+    # Full Simulation Data Table
+    st.subheader("Full Simulation Data")
+    st.dataframe(df.style.format({
+        "BTC Price": "${:,.2f}",
+        "BTC Value (USD)": "${:,.2f}",
+        "Loan Balance (USD)": "${:,.2f}",
+        "Interest Accrued (USD)": "${:,.2f}",
+        "Minimum Payment (USD)": "${:,.2f}"
+    }))
 
     # CSV download
     csv = df.to_csv(index=False).encode('utf-8')
