@@ -36,7 +36,10 @@ run_simulation = st.sidebar.button("Run Simulation")
 if run_simulation:
     btc_price = initial_price
     btc_balance = initial_btc
+
+    # Initial Loan Amount calculation based on LTV ratio
     loan_amount = initial_btc * btc_price * (ltv / 100)
+    
     monthly_interest = interest_rate / 12 / 100
     price_prediction = []
 
