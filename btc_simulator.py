@@ -15,6 +15,7 @@ loan_term = st.sidebar.number_input("Loan Term (months)", value=12, min_value=1)
 monthly_price_change = st.sidebar.number_input("BTC Monthly Price Change (%)", value=2.0)
 monthly_dca = st.sidebar.number_input("Monthly DCA Amount (BTC)", value=0.01)
 monthly_withdrawal = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=500.0)
+monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, min_value=0.0)  # New input
 
 run_simulation = st.sidebar.button("Run Simulation")
 
@@ -36,6 +37,9 @@ if run_simulation:
         interest_accrued = loan_amount * monthly_interest  # Interest for the month
         total_interest_accrued += interest_accrued  # Add to total interest
 
+        # Calculate minimum payment: minimum of interest or monthly payment
+        minimum_payment = max(interest_accrued, monthly_payment)
+
         if not liquidation_triggered and total_btc_value < loan_amount:
             liquidation_triggered = True
             liquidation_month = month
@@ -47,6 +51,7 @@ if run_simulation:
             "BTC Value (USD)": total_btc_value,
             "Loan Balance (USD)": loan_amount,
             "Interest Accrued (USD)": total_interest_accrued,
+            "Minimum Payment (USD)": minimum_payment,
             "Liquidation Risk": "⚠️" if total_btc_value < loan_amount else ""
         })
 
@@ -55,6 +60,9 @@ if run_simulation:
         btc_balance += monthly_dca
         loan_amount += monthly_withdrawal
         loan_amount += interest_accrued  # Add interest to loan balance
+
+        # Apply the minimum payment to reduce the loan balance
+        loan_amount -= minimum_payment
 
     df = pd.DataFrame(data)
 
@@ -84,7 +92,8 @@ if run_simulation:
             "BTC Price": "${:,.2f}",
             "BTC Value (USD)": "${:,.2f}",
             "Loan Balance (USD)": "${:,.2f}",
-            "Interest Accrued (USD)": "${:,.2f}"
+            "Interest Accrued (USD)": "${:,.2f}",
+            "Minimum Payment (USD)": "${:,.2f}"
         }))
 
     # CSV download
