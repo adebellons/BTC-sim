@@ -5,6 +5,9 @@ import yfinance as yf
 st.set_page_config(page_title="BTC Loan Leverage Simulator", layout="wide")
 st.title("BTC Loan Leverage Simulator")
 
+# Loan type selection
+loan_type = st.sidebar.selectbox("Loan Type", ["Standard Loan", "DCA as Independent Loans"])
+
 # Sidebar inputs
 st.sidebar.header("Simulation Inputs")
 initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0, min_value=0.0)
@@ -90,42 +93,86 @@ if run_simulation:
     data = []
     total_interest_accrued = 0.0
 
-    for month in range(loan_term + 1):
-        btc_price = price_prediction[month]
-        btc_balance += monthly_dca
-        total_btc_value = btc_balance * btc_price
-        monthly_interest_accrued = loan_amount * monthly_interest
-        total_interest_accrued += monthly_interest_accrued
+    if loan_type == "Standard Loan":
+        # Standard loan logic
+        for month in range(loan_term + 1):
+            btc_price = price_prediction[month]
+            btc_balance += monthly_dca
+            total_btc_value = btc_balance * btc_price
+            monthly_interest_accrued = loan_amount * monthly_interest
+            total_interest_accrued += monthly_interest_accrued
 
-        minimum_payment = max(monthly_interest_accrued, monthly_payment)
-        if loan_amount <= 0:
-            minimum_payment = 0
+            minimum_payment = max(monthly_interest_accrued, monthly_payment)
+            if loan_amount <= 0:
+                minimum_payment = 0
 
-        if total_btc_value < loan_amount * (ltv_liquidation_percentage / 100):
-            liquidation_risk = "Yes"
-        else:
-            liquidation_risk = "No"
+            if total_btc_value < loan_amount * (ltv_liquidation_percentage / 100):
+                liquidation_risk = "Yes"
+            else:
+                liquidation_risk = "No"
 
-        data.append({
-            "Month": month,
-            "BTC Price": btc_price,
-            "BTC Balance": btc_balance,
-            "BTC Value (USD)": total_btc_value,
-            "Loan Balance (USD)": loan_amount,
-            "Interest Accrued (USD)": total_interest_accrued,
-            "Monthly Interest (USD)": monthly_interest_accrued,
-            "Minimum Payment (USD)": minimum_payment,
-            "Liquidation Risk": liquidation_risk
-        })
+            data.append({
+                "Month": month,
+                "BTC Price": btc_price,
+                "BTC Balance": btc_balance,
+                "BTC Value (USD)": total_btc_value,
+                "Loan Balance (USD)": loan_amount,
+                "Interest Accrued (USD)": total_interest_accrued,
+                "Monthly Interest (USD)": monthly_interest_accrued,
+                "Minimum Payment (USD)": minimum_payment,
+                "Liquidation Risk": liquidation_risk
+            })
 
-        loan_amount += monthly_withdrawal + monthly_interest_accrued
-        loan_amount -= minimum_payment
-        if loan_amount < 0:
-            loan_amount = 0
+            loan_amount += monthly_withdrawal + monthly_interest_accrued
+            loan_amount -= minimum_payment
+            if loan_amount < 0:
+                loan_amount = 0
+
+    elif loan_type == "DCA as Independent Loans":
+        # DCA as Independent Loans logic
+        dca_loans = []
+        total_interest_accrued = 0.0
+        for month in range(loan_term + 1):
+            btc_price = price_prediction[month]
+            # Each DCA is treated as an independent loan
+            loan_amount = monthly_dca * btc_price * (ltv / 100)
+            monthly_interest_accrued = loan_amount * monthly_interest
+            total_interest_accrued += monthly_interest_accrued
+
+            minimum_payment = max(monthly_interest_accrued, monthly_payment)
+            if loan_amount <= 0:
+                minimum_payment = 0
+
+            # Track each DCA loan's progress
+            dca_loans.append({
+                "Month": month,
+                "BTC Price": btc_price,
+                "DCA Loan Amount (USD)": loan_amount,
+                "Interest Accrued (USD)": total_interest_accrued,
+                "Monthly Interest (USD)": monthly_interest_accrued,
+                "Minimum Payment (USD)": minimum_payment
+            })
+
+            # Update loan amount based on minimum payment
+            loan_amount -= minimum_payment
+            if loan_amount < 0:
+                loan_amount = 0
+
+        # Flatten data for DCA loans into a DataFrame
+        df_dca = pd.DataFrame(dca_loans)
+
+        st.subheader("DCA as Independent Loans Results")
+        st.dataframe(df_dca.style.format({
+            "BTC Price": "${:,.2f}",
+            "DCA Loan Amount (USD)": "${:,.2f}",
+            "Interest Accrued (USD)": "${:,.2f}",
+            "Monthly Interest (USD)": "${:,.2f}",
+            "Minimum Payment (USD)": "${:,.2f}"
+        }))
 
     df = pd.DataFrame(data)
 
-    st.subheader("Simulation Results")
+    st.subheader("Standard Loan Results")
     st.dataframe(df.style.format({
         "BTC Price": "${:,.2f}",
         "BTC Value (USD)": "${:,.2f}",
@@ -135,8 +182,9 @@ if run_simulation:
         "Minimum Payment (USD)": "${:,.2f}"
     }))
 
+    # Option to download CSV
     csv = df.to_csv(index=False).encode('utf-8')
-    st.download_button("Download CSV", csv, "btc_sim_results.csv", "text/csv")
+    st.download_button("Download CSV (Standard Loan)", csv, "btc_sim_results_standard_loan.csv", "text/csv")
 
 else:
     st.info("Enter values on the left and click 'Run Simulation' to see the results.")
