@@ -4,7 +4,7 @@ import yfinance as yf
 import numpy as np
 
 st.set_page_config(page_title="BTC Sim", layout="wide")
-st.title("BTC Loan Leverage Simulator")
+st.title("BTC Sim")
 
 # Sidebar inputs
 st.sidebar.header("Simulation Inputs")
@@ -19,6 +19,7 @@ monthly_withdrawal = st.sidebar.number_input("Monthly Income Withdrawal (USD)", 
 monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, min_value=0.0)  # New input
 
 use_historical_data = st.sidebar.checkbox("Use Historical Bitcoin Price Data for Prediction")
+use_live_price = st.sidebar.checkbox("Use Live Bitcoin Price")
 
 run_simulation = st.sidebar.button("Run Simulation")
 
@@ -29,8 +30,14 @@ if run_simulation:
     loan_amount = initial_btc * initial_price * (ltv / 100)
     monthly_interest = interest_rate / 12 / 100
     
+    # Fetch live Bitcoin price if selected
+    if use_live_price:
+        st.sidebar.text("Fetching live Bitcoin price...")
+        btc_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]  # Get live Bitcoin price from Yahoo Finance
+        st.sidebar.text(f"Live Bitcoin Price: ${btc_price:.2f}")
+
     # Fetch historical data if required
-    if use_historical_data:
+    elif use_historical_data:
         data = yf.download('BTC-USD', period="5y", interval="1d")  # Fetch 5 years of historical data
         
         # Check if data is returned
