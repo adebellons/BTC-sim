@@ -19,11 +19,10 @@ with st.sidebar:
     initial_price = st.number_input("Initial BTC Price (USD)", min_value=1.0, value=30000.0)
 
     ltv = st.slider("Loan-to-Value (LTV %)", min_value=10, max_value=90, value=50, step=1)
-    liq_threshold = st.slider("Liquidation Threshold (%)", min_value=1, max_value=100, value=85, step=1)
-
     interest_rate = st.number_input("Annual Interest Rate (%)", min_value=0.0, value=6.0)
     monthly_payment = st.number_input("Monthly Payment (USD)", min_value=0.0, value=0.0)
     min_payment = st.number_input("Minimum Monthly Payment (USD)", min_value=0.0, value=0.0)
+    liq_threshold = st.slider("Liquidation Threshold (%)", min_value=1, max_value=100, value=85, step=1)
 
     dca_enabled = st.checkbox("Enable DCA (BTC)", value=False)
     if dca_enabled:
