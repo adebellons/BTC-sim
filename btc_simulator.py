@@ -124,6 +124,12 @@ if run_simulation:
         if loan_balance < 0:
             loan_balance = 0  # Ensure the loan balance doesn't go negative
 
+        # Update the loan amount with interest and withdrawal
+        loan_amount += monthly_withdrawal + monthly_interest_accrued
+        loan_amount -= minimum_payment
+        if loan_amount < 0:
+            loan_amount = 0
+
         if total_btc_value < loan_balance * (ltv_liquidation_percentage / 100):
             liquidation_risk = "Yes"
         else:
@@ -141,12 +147,6 @@ if run_simulation:
             "Minimum Monthly Payment (USD)": min_monthly_payment,
             "Liquidation Risk": liquidation_risk
         })
-
-        # Update loan amount with withdrawal and interest, deduct minimum payment
-        loan_amount += monthly_withdrawal + monthly_interest_accrued
-        loan_amount -= minimum_payment
-        if loan_amount < 0:
-            loan_amount = 0
 
     df = pd.DataFrame(data)
 
