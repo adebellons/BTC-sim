@@ -7,9 +7,10 @@ st.title("BTC Loan Leverage Simulator")
 
 # Sidebar inputs
 st.sidebar.header("Simulation Inputs")
-initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0, min_value=0.0)
+run_simulation = st.sidebar.button("Run Simulation")
 
-# Checkboxes directly under initial BTC
+# Sidebar options and inputs
+initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0, min_value=0.0)
 use_historical_data = st.sidebar.checkbox("Use Historical Bitcoin Price Data for Prediction")
 use_live_price = st.sidebar.checkbox("Use Live Bitcoin Price")
 
@@ -30,8 +31,6 @@ loan_term = st.sidebar.number_input("Loan Term (months)", value=12, min_value=1)
 monthly_dca = st.sidebar.number_input("Monthly DCA Amount (BTC)", value=0.01)
 monthly_withdrawal = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=500.0)
 monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, min_value=0.0)
-
-run_simulation = st.sidebar.button("Run Simulation")
 
 if run_simulation:
     # Set initial BTC balance and loan amount based on LTV
@@ -116,7 +115,7 @@ if run_simulation:
             "Month": month,
             "BTC Price": btc_price,
             "BTC Balance": btc_balance,
-            "Loan Amount (USD)": loan_amount,  # Updated column for loan amount
+            "BTC Value (USD)": total_btc_value,
             "Loan Balance (USD)": loan_amount,
             "Interest Accrued (USD)": total_interest_accrued,
             "Monthly Interest (USD)": monthly_interest_accrued,
@@ -135,7 +134,7 @@ if run_simulation:
     st.subheader("Simulation Results")
     st.dataframe(df.style.format({
         "BTC Price": "${:,.2f}",
-        "Loan Amount (USD)": "${:,.2f}",  # Formatted the Loan Amount column
+        "BTC Value (USD)": "${:,.2f}",  # Reverting to BTC Value column
         "Loan Balance (USD)": "${:,.2f}",
         "Interest Accrued (USD)": "${:,.2f}",
         "Monthly Interest (USD)": "${:,.2f}",
