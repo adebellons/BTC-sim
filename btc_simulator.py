@@ -34,11 +34,11 @@ if run_simulation:
 
     for month in range(loan_term + 1):
         total_btc_value = btc_balance * btc_price
-        interest_accrued = loan_amount * monthly_interest  # Interest for the month
-        total_interest_accrued += interest_accrued  # Add to total interest
+        monthly_interest_accrued = loan_amount * monthly_interest  # Monthly interest for the month
+        total_interest_accrued += monthly_interest_accrued  # Add to total interest
 
         # Calculate minimum payment: minimum of interest or monthly payment
-        minimum_payment = max(interest_accrued, monthly_payment)
+        minimum_payment = max(monthly_interest_accrued, monthly_payment)
         
         # If loan balance is zero, set minimum payment to zero
         if loan_amount <= 0:
@@ -61,6 +61,7 @@ if run_simulation:
             "BTC Value (USD)": total_btc_value,
             "Loan Balance (USD)": loan_amount,
             "Interest Accrued (USD)": total_interest_accrued,
+            "Monthly Interest (USD)": monthly_interest_accrued,
             "Minimum Payment (USD)": minimum_payment,
             "Liquidation Risk": liquidation_risk
         })
@@ -69,7 +70,7 @@ if run_simulation:
         btc_price *= (1 + monthly_price_change / 100)
         btc_balance += monthly_dca
         loan_amount += monthly_withdrawal
-        loan_amount += interest_accrued  # Add interest to loan balance
+        loan_amount += monthly_interest_accrued  # Add interest to loan balance
 
         # Apply the minimum payment to reduce the loan balance
         loan_amount -= minimum_payment
@@ -87,6 +88,7 @@ if run_simulation:
         "BTC Value (USD)": "${:,.2f}",
         "Loan Balance (USD)": "${:,.2f}",
         "Interest Accrued (USD)": "${:,.2f}",
+        "Monthly Interest (USD)": "${:,.2f}",
         "Minimum Payment (USD)": "${:,.2f}"
     }))
 
