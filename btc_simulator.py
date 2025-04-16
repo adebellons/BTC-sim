@@ -116,7 +116,7 @@ if run_simulation:
             "Month": month,
             "BTC Price": btc_price,
             "BTC Balance": btc_balance,
-            "BTC Value (USD)": total_btc_value,
+            "Loan Amount (USD)": loan_amount,  # Updated column for loan amount
             "Loan Balance (USD)": loan_amount,
             "Interest Accrued (USD)": total_interest_accrued,
             "Monthly Interest (USD)": monthly_interest_accrued,
@@ -135,7 +135,7 @@ if run_simulation:
     st.subheader("Simulation Results")
     st.dataframe(df.style.format({
         "BTC Price": "${:,.2f}",
-        "BTC Value (USD)": "${:,.2f}",
+        "Loan Amount (USD)": "${:,.2f}",  # Formatted the Loan Amount column
         "Loan Balance (USD)": "${:,.2f}",
         "Interest Accrued (USD)": "${:,.2f}",
         "Monthly Interest (USD)": "${:,.2f}",
