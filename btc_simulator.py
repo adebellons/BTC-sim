@@ -118,9 +118,10 @@ if run_simulation:
         loan_balance = total_btc_value * (ltv / 100)
 
         # Update loan balance after subtracting the monthly payment
-        loan_balance -= minimum_payment
-        if loan_balance < 0:
-            loan_balance = 0  # Ensure the loan balance doesn't go negative
+        if month > 0:  # Start applying payments from month 1
+            loan_balance -= minimum_payment
+            if loan_balance < 0:
+                loan_balance = 0  # Ensure the loan balance doesn't go negative
 
         # Update the loan amount with interest and withdrawal
         loan_amount += monthly_withdrawal + monthly_interest_accrued
