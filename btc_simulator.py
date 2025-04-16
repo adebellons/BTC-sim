@@ -97,7 +97,7 @@ if run_simulation:
         monthly_interest_accrued = loan_balance * monthly_interest
         total_interest_accrued += monthly_interest_accrued
 
-        # Month 0 has no interest or payments
+        # For Month 0, no interest and no payments
         if month == 0:
             monthly_interest_accrued = 0
             minimum_payment = 0
