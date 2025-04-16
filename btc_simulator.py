@@ -74,6 +74,7 @@ loan_age_months = []
 overall_months = []
 
 independent_loans = []
+loan_data = []
 
 for month in range(simulation_months):
     price = btc_prices[month]
@@ -90,16 +91,29 @@ for month in range(simulation_months):
         independent_loans.append({
             "start_month": month + 1,
             "amount": new_loan,
+            "balance": new_loan,
             "age": 1
         })
-        loan_balance *= (1 + loan_interest_rate / 12)
-        loan_balance += new_loan + monthly_income_draw
-
-        loan_opened_months.append(month + 1)
-        loan_age_months.append(1)
+        for loan in independent_loans:
+            if loan["start_month"] < (month + 1):
+                loan["age"] += 1
+            loan["balance"] *= (1 + loan_interest_rate / 12)
+        loan_balance = sum(loan["balance"] for loan in independent_loans) + monthly_income_draw
 
         for loan in independent_loans:
-            loan["age"] += 1
+            loan_data.append({
+                "Loan # (Opened in Month)": loan["start_month"],
+                "Month of This Loan": loan["age"],
+                "Overall Month": month + 1,
+                "BTC Price Now": f"{price:,.2f}",
+                "BTC Collateral": f"{btc_holdings:.6f}",
+                "Loan Principal": f"{loan['amount']:,.2f}",
+                "Interest Accrued (Simple)": f"{loan['balance'] - loan['amount']:,.2f}",
+                "Monthly Interest": f"{(loan_interest_rate / 12) * 100:.2f}",
+                "Total Owed": f"{loan['balance']:,.2f}",
+                "LTV (%)": f"{(loan['balance'] / (btc_holdings * price)) * 100:.2f}",
+                "Liquidation Risk": "Yes" if (loan['balance'] / (btc_holdings * price)) * 100 >= liquidation_ltv else "No"
+            })
 
     total_collateral_value = btc_holdings * price
     equity = total_collateral_value - loan_balance
@@ -116,19 +130,23 @@ ltv_percentages = [(loan_balances[i] / btc_collateral_value[i]) * 100 if btc_col
 liquidation_risks = ["Yes" if ltv_percentages[i] >= liquidation_ltv else "No" for i in range(simulation_months)]
 
 # Main Summary Table
-data = pd.DataFrame({
-    'Loan # (Opened in Month)': loan_opened_months,
-    'Month of This Loan': loan_age_months,
-    'Overall Month': overall_months,
-    'BTC Price Now': [f"{p:,.2f}" for p in btc_prices],
-    'BTC Collateral': [f"{h:.6f}" for h in btc_holdings_over_time],
-    'Loan Principal': [f"{loan_principal:,.2f}" for _ in range(simulation_months)],
-    'Interest Accrued (Simple)': [f"{ia:,.2f}" for ia in interest_accrued],
-    'Monthly Interest': [f"{(loan_interest_rate / 12) * 100:.2f}" for _ in range(simulation_months)],
-    'Total Owed': [f"{v:,.2f}" for v in loan_balances],
-    'LTV (%)': [f"{ltv:.2f}" for ltv in ltv_percentages],
-    'Liquidation Risk': liquidation_risks
-})
+if simulation_mode == "Standard Loan":
+    data = pd.DataFrame({
+        'Loan # (Opened in Month)': loan_opened_months,
+        'Month of This Loan': loan_age_months,
+        'Overall Month': overall_months,
+        'BTC Price Now': [f"{p:,.2f}" for p in btc_prices],
+        'BTC Collateral': [f"{h:.6f}" for h in btc_holdings_over_time],
+        'Loan Principal': [f"{loan_principal:,.2f}" for _ in range(simulation_months)],
+        'Interest Accrued (Simple)': [f"{ia:,.2f}" for ia in interest_accrued],
+        'Monthly Interest': [f"{(loan_interest_rate / 12) * 100:.2f}" for _ in range(simulation_months)],
+        'Total Owed': [f"{v:,.2f}" for v in loan_balances],
+        'LTV (%)': [f"{ltv:.2f}" for ltv in ltv_percentages],
+        'Liquidation Risk': liquidation_risks
+    })
+else:
+    data = pd.DataFrame(loan_data)
+    data = data.sort_values(by="Overall Month").reset_index(drop=True)
 
 st.subheader("🗕️ Monthly Breakdown")
 st.dataframe(data, use_container_width=True)
