@@ -44,6 +44,7 @@ liquidation_ltv = st.sidebar.slider("Liquidation LTV Threshold (%)", min_value=5
 loan_interest_rate = st.sidebar.slider("Loan Interest Rate (Annual %)", min_value=1.00, max_value=15.00, value=6.00, step=0.01) / 100
 monthly_dca_usd = st.sidebar.number_input("Monthly DCA Amount (USD)", value=500, step=50)
 monthly_income_draw = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=1000, step=100)
+minimum_monthly_payment = st.sidebar.number_input("Minimum Monthly Payment (USD)", value=0, step=50)
 simulation_months = st.sidebar.slider("Simulation Length (Months)", 12, 60, 36)
 
 # Simulate BTC price using a geometric growth model
@@ -101,7 +102,7 @@ for month in range(simulation_months):
         loan_balance = sum(loan["balance"] for loan in independent_loans) + monthly_income_draw
 
         for loan in independent_loans:
-            min_payment = loan["balance"] * (loan_interest_rate / 12)
+            min_payment = max(loan["balance"] * (loan_interest_rate / 12), minimum_monthly_payment)
             loan_data.append({
                 "Loan # (Opened in Month)": loan["start_month"],
                 "Month of This Loan": loan["age"],
@@ -143,7 +144,7 @@ if simulation_mode == "Standard Loan":
         'Interest Accrued (Simple)': [f"{ia:,.2f}" for ia in interest_accrued],
         'Monthly Interest': [f"{(loan_interest_rate / 12) * 100:.2f}" for _ in range(simulation_months)],
         'Total Owed': [f"{v:,.2f}" for v in loan_balances],
-        'Minimum Payment': [f"{(v * loan_interest_rate / 12):,.2f}" for v in loan_balances],
+        'Minimum Payment': [f"{max((v * loan_interest_rate / 12), minimum_monthly_payment):,.2f}" for v in loan_balances],
         'LTV (%)': [f"{ltv:.2f}" for ltv in ltv_percentages],
         'Liquidation Risk': liquidation_risks
     })
