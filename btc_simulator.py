@@ -117,7 +117,7 @@ if run_simulation:
         # Loan balance is calculated as LTV of the BTC value
         loan_balance = total_btc_value * (ltv / 100)
 
-        # Update loan balance after subtracting the monthly payment
+        # Apply the monthly payment to the loan balance starting from month 1
         if month > 0:  # Start applying payments from month 1
             loan_balance -= minimum_payment
             if loan_balance < 0:
