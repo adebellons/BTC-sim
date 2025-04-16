@@ -15,7 +15,7 @@ interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0)
 payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0)
 min_payment = st.sidebar.number_input("Minimum Monthly Payment (USD)", value=0.0)
 
-simulation_years = st.sidebar.slider("Simulation Duration (Years)", 1, 10, 3)
+simulation_months = st.sidebar.slider("Simulation Duration (Months)", 12, 120, 36)
 
 use_live_data = st.sidebar.checkbox("Use live BTC price", value=False)
 
@@ -27,7 +27,7 @@ else:
 run_sim = st.button("Run Simulation")
 
 if run_sim:
-    months = simulation_years * 12
+    months = simulation_months
     prices = [btc_price * (1 + 0.02)**(i / 12) for i in range(months + 1)]
 
     loan_balance = initial_btc * btc_price * ltv / 100
