@@ -101,6 +101,7 @@ for month in range(simulation_months):
         loan_balance = sum(loan["balance"] for loan in independent_loans) + monthly_income_draw
 
         for loan in independent_loans:
+            min_payment = loan["balance"] * (loan_interest_rate / 12)
             loan_data.append({
                 "Loan # (Opened in Month)": loan["start_month"],
                 "Month of This Loan": loan["age"],
@@ -111,6 +112,7 @@ for month in range(simulation_months):
                 "Interest Accrued (Simple)": f"{loan['balance'] - loan['amount']:,.2f}",
                 "Monthly Interest": f"{(loan_interest_rate / 12) * 100:.2f}",
                 "Total Owed": f"{loan['balance']:,.2f}",
+                "Minimum Payment": f"{min_payment:,.2f}",
                 "LTV (%)": f"{(loan['balance'] / (btc_holdings * price)) * 100:.2f}",
                 "Liquidation Risk": "Yes" if (loan['balance'] / (btc_holdings * price)) * 100 >= liquidation_ltv else "No"
             })
@@ -141,11 +143,13 @@ if simulation_mode == "Standard Loan":
         'Interest Accrued (Simple)': [f"{ia:,.2f}" for ia in interest_accrued],
         'Monthly Interest': [f"{(loan_interest_rate / 12) * 100:.2f}" for _ in range(simulation_months)],
         'Total Owed': [f"{v:,.2f}" for v in loan_balances],
+        'Minimum Payment': [f"{(v * loan_interest_rate / 12):,.2f}" for v in loan_balances],
         'LTV (%)': [f"{ltv:.2f}" for ltv in ltv_percentages],
         'Liquidation Risk': liquidation_risks
     })
 else:
     data = pd.DataFrame(loan_data)
+    data["Overall Month"] = data["Overall Month"].astype(int)
     data = data.sort_values(by="Overall Month").reset_index(drop=True)
 
 st.subheader("🗕️ Monthly Breakdown")
