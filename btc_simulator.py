@@ -94,7 +94,7 @@ if run_simulation:
     for month in range(loan_term + 1):
         btc_price = price_prediction[month]
         btc_balance += monthly_dca
-        total_btc_value = btc_balance * btc_price
+        total_btc_value = btc_balance * btc_price  # Correct BTC value calculation
         monthly_interest_accrued = loan_amount * monthly_interest
         total_interest_accrued += monthly_interest_accrued
 
@@ -115,7 +115,7 @@ if run_simulation:
             "Month": month,
             "BTC Price": btc_price,
             "BTC Balance": btc_balance,
-            "BTC Value (USD)": total_btc_value,
+            "BTC Value (USD)": total_btc_value,  # Correct BTC value column
             "Loan Balance (USD)": loan_amount,
             "Interest Accrued (USD)": total_interest_accrued,
             "Monthly Interest (USD)": monthly_interest_accrued,
@@ -134,7 +134,7 @@ if run_simulation:
     st.subheader("Simulation Results")
     st.dataframe(df.style.format({
         "BTC Price": "${:,.2f}",
-        "BTC Value (USD)": "${:,.2f}",  # Reverting to BTC Value column
+        "BTC Value (USD)": "${:,.2f}",  # Correct column for BTC Value
         "Loan Balance (USD)": "${:,.2f}",
         "Interest Accrued (USD)": "${:,.2f}",
         "Monthly Interest (USD)": "${:,.2f}",
