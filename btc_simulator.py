@@ -13,6 +13,15 @@ initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0, min_value
 use_historical_data = st.sidebar.checkbox("Use Historical Bitcoin Price Data for Prediction")
 use_live_price = st.sidebar.checkbox("Use Live Bitcoin Price")
 
+live_price = None
+if use_live_price:
+    st.sidebar.write("Fetching live Bitcoin price...")
+    try:
+        live_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
+        st.sidebar.write(f"Live Bitcoin Price: ${live_price:,.2f}")
+    except Exception as e:
+        st.sidebar.error(f"Error fetching live price: {e}")
+
 initial_price = st.sidebar.number_input("Initial BTC Price (USD)", value=30000.0, min_value=0.0)
 ltv = st.sidebar.slider("Loan-to-Value (LTV %)", min_value=0, max_value=100, value=50)
 ltv_liquidation_percentage = st.sidebar.slider("LTV Liquidation Threshold (%)", min_value=0, max_value=100, value=80)
@@ -31,12 +40,9 @@ if run_simulation:
     monthly_interest = interest_rate / 12 / 100
     price_prediction = []
 
-    if use_live_price:
-        live_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
-        st.sidebar.text(f"Live Bitcoin Price (Month 0): ${live_price:.2f}")
+    if use_live_price and live_price:
         price_prediction.append(float(live_price))
 
-        # Predict future prices from live price
         if use_historical_data:
             data = yf.download('BTC-USD', period="5y", interval="1d")
             if not data.empty:
