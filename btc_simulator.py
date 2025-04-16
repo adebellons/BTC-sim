@@ -9,6 +9,7 @@ st.sidebar.header("Simulation Inputs")
 initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0, min_value=0.0)
 initial_price = st.sidebar.number_input("Initial BTC Price (USD)", value=30000.0, min_value=0.0)
 ltv = st.sidebar.slider("Loan-to-Value (LTV %)", min_value=0, max_value=100, value=50)
+ltv_liquidation_percentage = st.sidebar.slider("LTV Liquidation Threshold (%)", min_value=0, max_value=100, value=80)  # New slider
 interest_rate = st.sidebar.number_input("Loan Interest Rate (%)", value=5.0, min_value=0.0)
 loan_term = st.sidebar.number_input("Loan Term (months)", value=12, min_value=1)
 monthly_price_change = st.sidebar.number_input("BTC Monthly Price Change (%)", value=2.0)
@@ -43,6 +44,12 @@ if run_simulation:
         if loan_amount <= 0:
             minimum_payment = 0
 
+        # Calculate liquidation risk based on LTV liquidation percentage
+        if total_btc_value < loan_amount * (ltv_liquidation_percentage / 100):
+            liquidation_risk = f"⚠️ Liquidation risk (below {ltv_liquidation_percentage}% LTV)"
+        else:
+            liquidation_risk = ""
+
         if not liquidation_triggered and total_btc_value < loan_amount:
             liquidation_triggered = True
             liquidation_month = month
@@ -55,7 +62,7 @@ if run_simulation:
             "Loan Balance (USD)": loan_amount,
             "Interest Accrued (USD)": total_interest_accrued,
             "Minimum Payment (USD)": minimum_payment,
-            "Liquidation Risk": "⚠️" if total_btc_value < loan_amount else ""
+            "Liquidation Risk": liquidation_risk
         })
 
         # Simulate next month
