@@ -1,71 +1,75 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
 import yfinance as yf
-from datetime import datetime
 
+st.set_page_config(page_title="BTC Loan Leverage Simulator", layout="wide")
 st.title("BTC Loan Leverage Simulator")
 
-# --- Sidebar settings ---
-st.sidebar.header("Simulation Settings")
+with st.sidebar:
+    st.header("Simulation Settings")
 
-initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0)
-ltv = st.sidebar.slider("Initial Loan-to-Value (LTV) %", min_value=0, max_value=100, value=50)
-interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0)
-payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0)
-min_payment = st.sidebar.number_input("Minimum Monthly Payment (USD)", value=0.0)
+    sim_type = st.radio("Price Data", ["Historical", "Live"], index=0)
+    if sim_type == "Historical":
+        years = st.slider("Years of Historical Data", 1, 10, 5)
+    else:
+        years = 1
 
-simulation_years = st.sidebar.slider("Simulation Duration (Years)", 1, 10, 3)
-liq_threshold = st.sidebar.slider("Liquidation Threshold LTV %", 1, 100, 85)
+    initial_btc = st.number_input("Initial BTC Collateral", min_value=0.0, value=1.0)
+    initial_price = st.number_input("Initial BTC Price (USD)", min_value=1.0, value=30000.0)
 
-use_live_data = st.sidebar.checkbox("Use live BTC price", value=False)
+    ltv = st.slider("Loan-to-Value (LTV %)", min_value=10, max_value=90, value=50, step=1)
+    liq_threshold = st.slider("Liquidation Threshold (%)", min_value=1, max_value=100, value=85, step=1)
 
-if use_live_data:
-    btc_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
-else:
-    btc_price = st.sidebar.number_input("BTC Price (USD)", value=30000.0)
+    interest_rate = st.number_input("Annual Interest Rate (%)", min_value=0.0, value=6.0)
+    monthly_payment = st.number_input("Monthly Payment (USD)", min_value=0.0, value=0.0)
+    min_payment = st.number_input("Minimum Monthly Payment (USD)", min_value=0.0, value=0.0)
+
+    dca_enabled = st.checkbox("Enable DCA (BTC)", value=False)
+    if dca_enabled:
+        dca_btc = st.number_input("Monthly DCA Amount (in USD)", min_value=0.0, value=100.0)
 
 run_sim = st.button("Run Simulation")
 
 if run_sim:
-    months = simulation_years * 12
-    prices = [btc_price * (1 + 0.02)**(i / 12) for i in range(months + 1)]
+    if sim_type == "Historical":
+        btc_data = yf.download("BTC-USD", period=f"{years}y", interval="1mo")["Close"].dropna().reset_index()
+        price_series = btc_data["Close"].tolist()
+    else:
+        price_series = [initial_price * (1 + np.random.normal(0, 0.05)) for _ in range(years * 12)]
 
-    loan_balance = initial_btc * btc_price * ltv / 100
-    btc_amount = initial_btc
-    interest_accrued = 0.0
+    loan_amount = initial_btc * initial_price * (ltv / 100)
+    btc_total = initial_btc
+    loan_balance = loan_amount
+    total_interest = 0.0
 
     rows = []
 
-    for m in range(months + 1):
-        price_idx = prices[m]
-        btc_value = btc_amount * price_idx
+    for m, price in enumerate(price_series):
+        btc_value = btc_total * price
+        monthly_interest = (interest_rate / 100) / 12 * loan_balance if m > 0 else 0.0
+        total_interest += monthly_interest
 
-        # Only calculate interest and payments after month 0
-        if m > 0:
-            monthly_interest = loan_balance * (interest_rate / 100) / 12
-            interest_accrued += monthly_interest
-            actual_payment = max(payment, min_payment)
-            loan_balance += monthly_interest - actual_payment
-        else:
-            monthly_interest = 0.0
-            actual_payment = 0.0
-
+        actual_payment = max(monthly_payment, min_payment) if m > 0 else 0.0
+        loan_balance = loan_balance + monthly_interest - actual_payment
         loan_balance = max(loan_balance, 0.0)
 
-        # compute risk
+        if dca_enabled:
+            btc_total += dca_btc / price
+
         curr_ltv = (loan_balance / btc_value * 100) if btc_value > 0 else 0.0
         risk = "Yes" if (curr_ltv > liq_threshold and loan_balance > 0) else "No"
 
         rows.append({
             "Month": m,
-            "BTC Price (USD)": price_idx,
+            "BTC Price (USD)": price,
             "Collateral Value (USD)": btc_value,
             "Loan Balance (USD)": loan_balance,
-            "Interest Accrued (Total)": interest_accrued,
-            "Monthly Interest": monthly_interest,
+            "Interest Accrued (Total)": total_interest,
             "Monthly Payment": actual_payment,
-            "LTV %": curr_ltv,
-            "At Risk of Liquidation": risk
+            "Monthly Interest": monthly_interest,
+            "LTV (%)": curr_ltv,
+            "Risk of Liquidation": risk,
         })
 
     df = pd.DataFrame(rows)
@@ -76,7 +80,7 @@ if run_sim:
         "Collateral Value (USD)": "${:,.2f}",
         "Loan Balance (USD)": "${:,.2f}",
         "Interest Accrued (Total)": "${:,.2f}",
-        "Monthly Interest": "${:,.2f}",
         "Monthly Payment": "${:,.2f}",
-        "LTV %": "{:.2f}%"
-    }), use_container_width=True)
+        "Monthly Interest": "${:,.2f}",
+        "LTV (%)": "{:.2f}%",
+    }))
