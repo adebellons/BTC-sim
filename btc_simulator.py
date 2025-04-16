@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 
-st.set_page_config(page_title="BTC Sim", layout="wide")
-st.title("BTC Sim")
+st.set_page_config(page_title="BTC Loan Leverage Simulator", layout="wide")
+st.title("BTC Loan Leverage Simulator")
 
 # Sidebar inputs
 st.sidebar.header("Simulation Inputs")
