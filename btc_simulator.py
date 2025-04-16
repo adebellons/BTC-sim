@@ -102,6 +102,7 @@ if run_simulation:
             monthly_interest_accrued = loan_amount * monthly_interest
             total_interest_accrued += monthly_interest_accrued
 
+            # Calculate the minimum payment
             minimum_payment = max(monthly_interest_accrued, monthly_payment)
             if loan_amount <= 0:
                 minimum_payment = 0
@@ -111,6 +112,7 @@ if run_simulation:
             else:
                 liquidation_risk = "No"
 
+            # Add data for each month
             data.append({
                 "Month": month,
                 "BTC Price": btc_price,
@@ -119,10 +121,12 @@ if run_simulation:
                 "Loan Balance (USD)": loan_amount,
                 "Interest Accrued (USD)": total_interest_accrued,
                 "Monthly Interest (USD)": monthly_interest_accrued,
-                "Minimum Payment (USD)": minimum_payment,
+                "Monthly Payment (USD)": monthly_payment,
+                "Calculated Minimum Payment (USD)": minimum_payment,
                 "Liquidation Risk": liquidation_risk
             })
 
+            # Update loan amount based on payments
             loan_amount += monthly_withdrawal + monthly_interest_accrued
             loan_amount -= minimum_payment
             if loan_amount < 0:
@@ -139,6 +143,7 @@ if run_simulation:
             monthly_interest_accrued = loan_amount * monthly_interest
             total_interest_accrued += monthly_interest_accrued
 
+            # Calculate the minimum payment
             minimum_payment = max(monthly_interest_accrued, monthly_payment)
             if loan_amount <= 0:
                 minimum_payment = 0
@@ -150,10 +155,11 @@ if run_simulation:
                 "DCA Loan Amount (USD)": loan_amount,
                 "Interest Accrued (USD)": total_interest_accrued,
                 "Monthly Interest (USD)": monthly_interest_accrued,
-                "Minimum Payment (USD)": minimum_payment
+                "Monthly Payment (USD)": monthly_payment,
+                "Calculated Minimum Payment (USD)": minimum_payment
             })
 
-            # Update loan amount based on minimum payment
+            # Update loan amount based on payments
             loan_amount -= minimum_payment
             if loan_amount < 0:
                 loan_amount = 0
@@ -167,7 +173,8 @@ if run_simulation:
             "DCA Loan Amount (USD)": "${:,.2f}",
             "Interest Accrued (USD)": "${:,.2f}",
             "Monthly Interest (USD)": "${:,.2f}",
-            "Minimum Payment (USD)": "${:,.2f}"
+            "Monthly Payment (USD)": "${:,.2f}",
+            "Calculated Minimum Payment (USD)": "${:,.2f}"
         }))
 
     df = pd.DataFrame(data)
@@ -179,7 +186,8 @@ if run_simulation:
         "Loan Balance (USD)": "${:,.2f}",
         "Interest Accrued (USD)": "${:,.2f}",
         "Monthly Interest (USD)": "${:,.2f}",
-        "Minimum Payment (USD)": "${:,.2f}"
+        "Monthly Payment (USD)": "${:,.2f}",
+        "Calculated Minimum Payment (USD)": "${:,.2f}"
     }))
 
     # Option to download CSV
