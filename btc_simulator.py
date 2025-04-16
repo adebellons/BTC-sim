@@ -11,7 +11,24 @@ st.sidebar.header("Simulation Settings")
 
 # Simulation parameters
 initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0)
-initial_price = st.sidebar.number_input("Initial BTC Price (USD)", value=30000.0)
+
+# Checkboxes directly after initial BTC input
+use_historical = st.sidebar.checkbox("Use Historical BTC Data for Prediction")
+use_live_price = st.sidebar.checkbox("Use Live BTC Price")
+
+# Show live price after checkbox (only if checked)
+if use_live_price:
+    st.sidebar.text("Fetching live Bitcoin price...")
+    live_data = yf.download("BTC-USD", period="1d", interval="1m")
+    if not live_data.empty:
+        live_price = live_data['Close'][-1]
+        st.sidebar.text(f"Live Bitcoin Price: ${live_price:,.2f}")
+        initial_price = live_price
+    else:
+        initial_price = st.sidebar.number_input("Initial BTC Price (USD)", value=30000.0)
+else:
+    initial_price = st.sidebar.number_input("Initial BTC Price (USD)", value=30000.0)
+
 ltv_ratio = st.sidebar.slider("Loan-to-Value (LTV) Ratio (%)", min_value=0, max_value=100, value=50)
 liquidation_threshold = st.sidebar.slider("Liquidation Threshold (%)", min_value=0, max_value=100, value=80)
 loan_term = st.sidebar.number_input("Loan Term (Months)", value=12)
@@ -20,29 +37,16 @@ monthly_withdrawal = st.sidebar.number_input("Monthly Loan Withdrawal (USD)", va
 monthly_payment = st.sidebar.number_input("Monthly Loan Payment (USD)", value=0.0)
 monthly_dca_usd = st.sidebar.number_input("Monthly DCA Purchase (USD)", value=0.0)
 
-# Historical data or live price toggle
-use_historical = st.sidebar.checkbox("Use Historical BTC Data for Prediction")
-use_live_price = st.sidebar.checkbox("Use Live BTC Price")
-
-# Run simulation button (placed back to below inputs)
+# Run simulation button
 run_simulation = st.button("Run Simulation")
 
 if run_simulation:
-    # Fetch live BTC price if selected
-    if use_live_price:
-        st.sidebar.text("Fetching live Bitcoin price...")
-        live_data = yf.download("BTC-USD", period="1d", interval="1m")
-        if not live_data.empty:
-            live_price = live_data['Close'][-1]
-            st.sidebar.text(f"Live Bitcoin Price: ${live_price:,.2f}")
-            initial_price = live_price
-
-    # Generate price predictions
+    # Prepare price prediction
     price_prediction = []
 
     if use_historical:
         end_date = datetime.datetime.today()
-        start_date = end_date - datetime.timedelta(days=5 * 365)  # Last 5 years
+        start_date = end_date - datetime.timedelta(days=5 * 365)
         hist_data = yf.download("BTC-USD", start=start_date, end=end_date, interval='1mo')
         monthly_closes = hist_data["Close"]
 
@@ -58,8 +62,7 @@ if run_simulation:
                     next_price = price_prediction[-1] * (1 + avg_monthly_pct_change)
                     price_prediction.append(next_price)
     else:
-        for i in range(loan_term + 1):
-            price_prediction.append(initial_price)  # Flat price by default
+        price_prediction = [initial_price] * (loan_term + 1)
 
     btc_balance = initial_btc
     loan_amount = initial_price * initial_btc * (ltv_ratio / 100)
