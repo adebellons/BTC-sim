@@ -7,6 +7,10 @@ st.title("BTC Loan Leverage Simulator")
 
 # Sidebar inputs
 st.sidebar.header("Simulation Inputs")
+
+# Move the 'Run Simulation' button to the top
+run_simulation = st.sidebar.button("Run Simulation")
+
 initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0, min_value=0.0)
 
 # Checkboxes directly under initial BTC
@@ -30,8 +34,6 @@ loan_term = st.sidebar.number_input("Loan Term (months)", value=12, min_value=1)
 monthly_dca = st.sidebar.number_input("Monthly DCA Amount (BTC)", value=0.01)
 monthly_withdrawal = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=500.0)
 monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, min_value=0.0)
-
-run_simulation = st.sidebar.button("Run Simulation")
 
 if run_simulation:
     btc_price = initial_price
