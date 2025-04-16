@@ -13,7 +13,6 @@ ltv = st.sidebar.slider("Initial Loan-to-Value (LTV) %", min_value=0, max_value=
 liq_threshold = st.sidebar.slider("Liquidation Threshold LTV %", 1, 100, 85)
 interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0)
 payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0)
-min_payment = st.sidebar.number_input("Minimum Monthly Payment (USD)", value=0.0)
 
 simulation_months = st.sidebar.slider("Simulation Duration (Months)", 12, 120, 36)
 
@@ -44,7 +43,7 @@ if run_sim:
         if m > 0:
             monthly_interest = loan_balance * (interest_rate / 100) / 12
             interest_accrued += monthly_interest
-            actual_payment = max(payment, min_payment)
+            actual_payment = payment
             loan_balance += monthly_interest - actual_payment
         else:
             monthly_interest = 0.0
