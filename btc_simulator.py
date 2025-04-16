@@ -30,11 +30,15 @@ if run_simulation:
     loan_amount = initial_btc * initial_price * (ltv / 100)
     monthly_interest = interest_rate / 12 / 100
     
+    # Initialize price prediction list
+    price_prediction = [btc_price]  # Ensure price_prediction is initialized with the initial BTC price
+
     # Fetch live Bitcoin price if selected
     if use_live_price:
         st.sidebar.text("Fetching live Bitcoin price...")
         btc_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]  # Get live Bitcoin price from Yahoo Finance
         st.sidebar.text(f"Live Bitcoin Price: ${btc_price:.2f}")
+        price_prediction[0] = btc_price  # Use live price as the first prediction
 
     # Fetch historical data if required
     elif use_historical_data:
@@ -59,18 +63,13 @@ if run_simulation:
                     avg_monthly_pct_change = avg_monthly_pct_change.values[0]
                 
                 # Predict future prices based on historical average change
-                price_prediction = []
                 for month in range(loan_term + 1):
                     btc_price *= (1 + avg_monthly_pct_change)  # Predict next month's price based on historical change
                     price_prediction.append(float(btc_price))  # Ensure it's a float, not a Series
 
-                # Use the predicted price for the simulation
-                btc_price = price_prediction[0]
-    
     else:
         # If historical data is not used, simulate a manual monthly price change
         monthly_price_change = st.sidebar.number_input("BTC Monthly Price Change (%)", value=2.0)
-        price_prediction = [btc_price]
         for month in range(loan_term + 1):
             btc_price *= (1 + monthly_price_change / 100)  # Simulate price change based on user input
             price_prediction.append(float(btc_price))  # Ensure it's a float, not a Series
