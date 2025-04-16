@@ -97,7 +97,7 @@ if run_simulation:
         monthly_interest_accrued = loan_balance * monthly_interest
         total_interest_accrued += monthly_interest_accrued
 
-        # Update loan balance after interest and payment
+        # Start interest and payment calculations from month 1
         if month > 0:
             loan_balance = loan_balance + monthly_interest_accrued - monthly_payment
             loan_balance = max(loan_balance, 0.0)
@@ -115,7 +115,7 @@ if run_simulation:
             "Month": month,
             "BTC Price": btc_price,
             "BTC Balance": btc_balance,
-            "BTC Value (USD)": total_btc_value,
+            "Collateral Value (USD)": total_btc_value,  # Renamed from BTC Value to Collateral Value
             "Loan Balance (USD)": loan_balance,
             "Interest Accrued (USD)": total_interest_accrued,
             "Monthly Interest (USD)": monthly_interest_accrued,
@@ -133,7 +133,7 @@ if run_simulation:
     st.subheader("Simulation Results")
     st.dataframe(df.style.format({
         "BTC Price": "${:,.2f}",
-        "BTC Value (USD)": "${:,.2f}",
+        "Collateral Value (USD)": "${:,.2f}",
         "Loan Balance (USD)": "${:,.2f}",
         "Interest Accrued (USD)": "${:,.2f}",
         "Monthly Interest (USD)": "${:,.2f}",
