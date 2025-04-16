@@ -97,14 +97,18 @@ if run_simulation:
         monthly_interest_accrued = loan_balance * monthly_interest
         total_interest_accrued += monthly_interest_accrued
 
-        # Start interest and payment calculations from month 1
-        if month > 0:
+        # Month 0 has no interest or payments
+        if month == 0:
+            monthly_interest_accrued = 0
+            minimum_payment = 0
+            loan_balance = loan_amount  # Ensure the balance remains at initial loan amount in Month 0
+        else:
+            # Start interest and payment calculations from month 1
             loan_balance = loan_balance + monthly_interest_accrued - monthly_payment
             loan_balance = max(loan_balance, 0.0)
-
-        minimum_payment = max(monthly_interest_accrued, monthly_payment)
-        if loan_balance <= 0:
-            minimum_payment = 0
+            minimum_payment = max(monthly_interest_accrued, monthly_payment)
+            if loan_balance <= 0:
+                minimum_payment = 0
 
         if total_btc_value < loan_balance * (ltv_liquidation_percentage / 100):
             liquidation_risk = "Yes"
