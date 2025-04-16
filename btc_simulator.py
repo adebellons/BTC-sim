@@ -56,7 +56,7 @@ if run_simulation:
                 price_prediction = []
                 for month in range(loan_term + 1):
                     btc_price *= (1 + avg_monthly_pct_change)  # Predict next month's price based on historical change
-                    price_prediction.append(btc_price)
+                    price_prediction.append(float(btc_price))  # Ensure it's a float, not a Series
 
                 # Use the predicted price for the simulation
                 btc_price = price_prediction[0]
@@ -67,7 +67,7 @@ if run_simulation:
         price_prediction = [btc_price]
         for month in range(loan_term + 1):
             btc_price *= (1 + monthly_price_change / 100)  # Simulate price change based on user input
-            price_prediction.append(btc_price)
+            price_prediction.append(float(btc_price))  # Ensure it's a float, not a Series
 
     # Tracking
     data = []
