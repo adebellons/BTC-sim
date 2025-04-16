@@ -10,12 +10,12 @@ st.sidebar.header("Simulation Settings")
 
 initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0)
 ltv = st.sidebar.slider("Initial Loan-to-Value (LTV) %", min_value=0, max_value=100, value=50)
+liq_threshold = st.sidebar.slider("Liquidation Threshold LTV %", 1, 100, 85)
 interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0)
 payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0)
 min_payment = st.sidebar.number_input("Minimum Monthly Payment (USD)", value=0.0)
 
 simulation_years = st.sidebar.slider("Simulation Duration (Years)", 1, 10, 3)
-liq_threshold = st.sidebar.slider("Liquidation Threshold LTV %", 1, 100, 85)
 
 use_live_data = st.sidebar.checkbox("Use live BTC price", value=False)
 
