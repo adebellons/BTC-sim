@@ -7,10 +7,6 @@ st.title("BTC Loan Leverage Simulator")
 
 # Sidebar inputs
 st.sidebar.header("Simulation Inputs")
-
-# Move the 'Run Simulation' button to the top
-run_simulation = st.sidebar.button("Run Simulation")
-
 initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0, min_value=0.0)
 
 # Checkboxes directly under initial BTC
@@ -34,6 +30,8 @@ loan_term = st.sidebar.number_input("Loan Term (months)", value=12, min_value=1)
 monthly_dca = st.sidebar.number_input("Monthly DCA Amount (BTC)", value=0.01)
 monthly_withdrawal = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=500.0)
 monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, min_value=0.0)
+
+run_simulation = st.sidebar.button("Run Simulation")
 
 if run_simulation:
     btc_price = initial_price
@@ -99,9 +97,13 @@ if run_simulation:
         monthly_interest_accrued = loan_amount * monthly_interest
         total_interest_accrued += monthly_interest_accrued
 
+        # Calculate minimum payment: minimum of interest or monthly payment
         minimum_payment = max(monthly_interest_accrued, monthly_payment)
         if loan_amount <= 0:
             minimum_payment = 0
+
+        # Calculate the minimum monthly payment (just the interest)
+        min_monthly_payment = monthly_interest_accrued if loan_amount > 0 else 0
 
         if total_btc_value < loan_amount * (ltv_liquidation_percentage / 100):
             liquidation_risk = "Yes"
@@ -116,7 +118,8 @@ if run_simulation:
             "Loan Balance (USD)": loan_amount,
             "Interest Accrued (USD)": total_interest_accrued,
             "Monthly Interest (USD)": monthly_interest_accrued,
-            "Minimum Payment (USD)": minimum_payment,
+            "Monthly Payment (USD)": minimum_payment,
+            "Minimum Monthly Payment (USD)": min_monthly_payment,
             "Liquidation Risk": liquidation_risk
         })
 
@@ -134,7 +137,8 @@ if run_simulation:
         "Loan Balance (USD)": "${:,.2f}",
         "Interest Accrued (USD)": "${:,.2f}",
         "Monthly Interest (USD)": "${:,.2f}",
-        "Minimum Payment (USD)": "${:,.2f}"
+        "Monthly Payment (USD)": "${:,.2f}",
+        "Minimum Monthly Payment (USD)": "${:,.2f}"
     }))
 
     csv = df.to_csv(index=False).encode('utf-8')
