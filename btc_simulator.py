@@ -32,9 +32,9 @@ if use_live_price:
 
 if run_simulation:
     # --- Setup ---
-    btc_balance  = initial_btc
-    price0       = live_price if (use_live_price and live_price) else initial_price
-    loan_balance = initial_btc * price0 * (ltv / 100)
+    btc_balance  = float(initial_btc)
+    price0       = float(live_price) if (use_live_price and live_price) else float(initial_price)
+    loan_balance = btc_balance * price0 * (ltv / 100)
     loan_amount  = loan_balance
     monthly_int  = interest_rate / 12 / 100
 
@@ -51,7 +51,7 @@ if run_simulation:
         pct = st.sidebar.number_input("BTC Monthly Price Change (%)", value=2.0)
         p   = price0
         for _ in range(loan_term):
-            p *= (1 + pct/100)
+            p *= (1 + pct / 100)
             prices.append(p)
     while len(prices) < loan_term + 1:
         prices.append(prices[-1])
@@ -61,41 +61,41 @@ if run_simulation:
     total_interest = 0.0
 
     for m in range(loan_term + 1):
-        price_idx = prices[m]
+        price_idx = float(prices[m])
         btc_balance += monthly_dca
-        btc_value   = float(btc_balance * price_idx)  # force float
+        btc_value   = float(btc_balance * price_idx)
 
         if m == 0:
             interest = 0.0
             payment  = 0.0
         else:
             # interest and payment
-            interest = loan_amount * monthly_int
+            interest = float(loan_balance * monthly_int)
             total_interest += interest
             payment  = max(interest, monthly_payment_input)
-            # update loan
             loan_balance = loan_balance + interest + monthly_withdrawal - payment
             loan_balance = max(loan_balance, 0.0)
-            loan_amount  = loan_balance  # keep these in sync
+            loan_amount  = loan_balance
 
-        # compute risk
+        # LTV & risk
         curr_ltv = (loan_balance / btc_value * 100) if btc_value > 0 else 0.0
         risk     = "Yes" if (curr_ltv > liq_threshold and loan_balance > 0) else "No"
 
         rows.append({
             "Month": m,
-            "BTC Price (USD)": price_idx,
-            "BTC Balance": btc_balance,
-            "BTC Value (USD)": btc_value,
-            "Loan Balance (USD)": loan_balance,
-            "Interest Accrued (Total)": total_interest,
-            "Monthly Interest (USD)": interest,
-            "Monthly Payment (USD)": payment,
-            "Current LTV (%)": curr_ltv,
+            "BTC Price (USD)": float(price_idx),
+            "BTC Balance": float(btc_balance),
+            "BTC Value (USD)": float(btc_value),
+            "Loan Balance (USD)": float(loan_balance),
+            "Interest Accrued (Total)": float(total_interest),
+            "Monthly Interest (USD)": float(interest),
+            "Monthly Payment (USD)": float(payment),
+            "Current LTV (%)": float(curr_ltv),
             "Liquidation Risk": risk
         })
 
     df = pd.DataFrame(rows)
+
     st.subheader("Simulation Results")
     st.dataframe(df.style.format({
         "BTC Price (USD)": "${:,.2f}",
