@@ -31,17 +31,12 @@ if run_simulation:
     
     # Fetch historical data if required
     if use_historical_data:
-        st.sidebar.text("Fetching historical data...")
         data = yf.download('BTC-USD', period="5y", interval="1d")  # Fetch 5 years of historical data
         
-        # Debugging: Check if data is returned
+        # Check if data is returned
         if data.empty:
             st.error("Error: No data returned from Yahoo Finance. Please check the data source.")
         else:
-            # Display a preview of the data to verify
-            st.sidebar.text(f"Fetched {len(data)} days of historical data.")
-            st.sidebar.text(f"Data preview:\n{data.head()}")
-
             historical_prices = data['Close']
             pct_changes = historical_prices.pct_change().dropna()
             
@@ -55,8 +50,6 @@ if run_simulation:
                 # Ensure avg_monthly_pct_change is a scalar and not a pandas Series
                 if isinstance(avg_monthly_pct_change, pd.Series):
                     avg_monthly_pct_change = avg_monthly_pct_change.values[0]
-                
-                st.sidebar.text(f"Avg. Monthly Price Change (from historical data): {avg_monthly_pct_change * 100:.2f}%")
                 
                 # Predict future prices based on historical average change
                 price_prediction = []
