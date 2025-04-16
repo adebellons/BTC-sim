@@ -32,7 +32,7 @@ if run_simulation:
     # Fetch historical data if required
     if use_historical_data:
         st.sidebar.text("Fetching historical data...")
-        data = yf.download('BTC-USD', period="1y", interval="1d")  # Fetch 1 year of historical data
+        data = yf.download('BTC-USD', period="5y", interval="1d")  # Fetch 5 years of historical data
         
         # Debugging: Check if data is returned
         if data.empty:
