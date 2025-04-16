@@ -39,6 +39,10 @@ if run_simulation:
 
         # Calculate minimum payment: minimum of interest or monthly payment
         minimum_payment = max(interest_accrued, monthly_payment)
+        
+        # If loan balance is zero, set minimum payment to zero
+        if loan_amount <= 0:
+            minimum_payment = 0
 
         if not liquidation_triggered and total_btc_value < loan_amount:
             liquidation_triggered = True
@@ -63,6 +67,10 @@ if run_simulation:
 
         # Apply the minimum payment to reduce the loan balance
         loan_amount -= minimum_payment
+
+        # Ensure loan balance does not go below zero
+        if loan_amount < 0:
+            loan_amount = 0
 
     df = pd.DataFrame(data)
 
