@@ -74,6 +74,10 @@ if run_simulation:
             btc_price *= (1 + monthly_price_change / 100)  # Simulate price change based on user input
             price_prediction.append(float(btc_price))  # Ensure it's a float, not a Series
 
+    # Ensure price_prediction has enough data for the whole simulation
+    while len(price_prediction) < loan_term + 1:
+        price_prediction.append(price_prediction[-1])  # Repeat the last price to fill missing entries
+
     # Tracking
     data = []
     liquidation_triggered = False
