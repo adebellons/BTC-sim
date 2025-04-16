@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import yfinance as yf
-import numpy as np
 
 st.set_page_config(page_title="BTC Sim", layout="wide")
 st.title("BTC Sim")
@@ -10,7 +9,7 @@ st.title("BTC Sim")
 st.sidebar.header("Simulation Inputs")
 initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0, min_value=0.0)
 
-# Moved checkboxes directly under initial BTC input
+# Checkboxes directly under initial BTC
 use_historical_data = st.sidebar.checkbox("Use Historical Bitcoin Price Data for Prediction")
 use_live_price = st.sidebar.checkbox("Use Live Bitcoin Price")
 
@@ -28,35 +27,54 @@ run_simulation = st.sidebar.button("Run Simulation")
 if run_simulation:
     btc_price = initial_price
     btc_balance = initial_btc
-    loan_amount = initial_btc * initial_price * (ltv / 100)
+    loan_amount = initial_btc * btc_price * (ltv / 100)
     monthly_interest = interest_rate / 12 / 100
-    price_prediction = [btc_price]
+    price_prediction = []
 
     if use_live_price:
-        st.sidebar.text("Fetching live Bitcoin price...")
-        btc_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
-        st.sidebar.text(f"Live Bitcoin Price: ${btc_price:.2f}")
-        price_prediction[0] = btc_price
+        live_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
+        st.sidebar.text(f"Live Bitcoin Price (Month 0): ${live_price:.2f}")
+        price_prediction.append(float(live_price))
+
+        # Predict future prices from live price
+        if use_historical_data:
+            data = yf.download('BTC-USD', period="5y", interval="1d")
+            if not data.empty:
+                pct_changes = data['Close'].pct_change().dropna()
+                if not pct_changes.empty:
+                    avg_pct_change = pct_changes.mean()
+                    if isinstance(avg_pct_change, pd.Series):
+                        avg_pct_change = avg_pct_change.values[0]
+                    btc_price = live_price
+                    for _ in range(loan_term):
+                        btc_price *= (1 + avg_pct_change)
+                        price_prediction.append(float(btc_price))
+        else:
+            monthly_price_change = st.sidebar.number_input("BTC Monthly Price Change (%)", value=2.0)
+            btc_price = live_price
+            for _ in range(loan_term):
+                btc_price *= (1 + monthly_price_change / 100)
+                price_prediction.append(float(btc_price))
 
     elif use_historical_data:
+        btc_price = initial_price
+        price_prediction.append(btc_price)
         data = yf.download('BTC-USD', period="5y", interval="1d")
-        if data.empty:
-            st.error("Error: No data returned from Yahoo Finance.")
-        else:
-            historical_prices = data['Close']
-            pct_changes = historical_prices.pct_change().dropna()
-            if pct_changes.empty:
-                st.error("Error: No percentage changes calculated.")
-            else:
-                avg_monthly_pct_change = pct_changes.mean()
-                if isinstance(avg_monthly_pct_change, pd.Series):
-                    avg_monthly_pct_change = avg_monthly_pct_change.values[0]
-                for month in range(loan_term + 1):
-                    btc_price *= (1 + avg_monthly_pct_change)
+        if not data.empty:
+            pct_changes = data['Close'].pct_change().dropna()
+            if not pct_changes.empty:
+                avg_pct_change = pct_changes.mean()
+                if isinstance(avg_pct_change, pd.Series):
+                    avg_pct_change = avg_pct_change.values[0]
+                for _ in range(loan_term):
+                    btc_price *= (1 + avg_pct_change)
                     price_prediction.append(float(btc_price))
+
     else:
+        btc_price = initial_price
+        price_prediction.append(btc_price)
         monthly_price_change = st.sidebar.number_input("BTC Monthly Price Change (%)", value=2.0)
-        for month in range(loan_term + 1):
+        for _ in range(loan_term):
             btc_price *= (1 + monthly_price_change / 100)
             price_prediction.append(float(btc_price))
 
@@ -64,12 +82,12 @@ if run_simulation:
         price_prediction.append(price_prediction[-1])
 
     data = []
-    liquidation_triggered = False
-    liquidation_month = None
     total_interest_accrued = 0.0
 
     for month in range(loan_term + 1):
-        total_btc_value = btc_balance * price_prediction[month]
+        btc_price = price_prediction[month]
+        btc_balance += monthly_dca
+        total_btc_value = btc_balance * btc_price
         monthly_interest_accrued = loan_amount * monthly_interest
         total_interest_accrued += monthly_interest_accrued
 
@@ -82,13 +100,9 @@ if run_simulation:
         else:
             liquidation_risk = "No"
 
-        if not liquidation_triggered and total_btc_value < loan_amount:
-            liquidation_triggered = True
-            liquidation_month = month
-
         data.append({
             "Month": month,
-            "BTC Price": price_prediction[month],
+            "BTC Price": btc_price,
             "BTC Balance": btc_balance,
             "BTC Value (USD)": total_btc_value,
             "Loan Balance (USD)": loan_amount,
@@ -98,15 +112,14 @@ if run_simulation:
             "Liquidation Risk": liquidation_risk
         })
 
-        loan_amount += monthly_withdrawal
-        loan_amount += monthly_interest_accrued
+        loan_amount += monthly_withdrawal + monthly_interest_accrued
         loan_amount -= minimum_payment
         if loan_amount < 0:
             loan_amount = 0
 
     df = pd.DataFrame(data)
 
-    st.subheader("Full Simulation Data")
+    st.subheader("Simulation Results")
     st.dataframe(df.style.format({
         "BTC Price": "${:,.2f}",
         "BTC Value (USD)": "${:,.2f}",
