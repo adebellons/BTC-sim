@@ -38,7 +38,8 @@ monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, mi
 if run_simulation:
     btc_price = initial_price
     btc_balance = initial_btc
-    loan_amount = initial_btc * btc_price * (ltv / 100)  # Initial loan amount calculation based on LTV
+    # Initial loan balance based on LTV: BTC amount * BTC price * LTV %
+    loan_amount = initial_btc * btc_price * (ltv / 100)
     monthly_interest = interest_rate / 12 / 100
     price_prediction = []
 
@@ -99,26 +100,27 @@ if run_simulation:
 
         # For month 0, skip interest and payment calculation
         if month > 0:
+            # Calculate interest based on loan balance
             monthly_interest_accrued = loan_amount * monthly_interest
             total_interest_accrued += monthly_interest_accrued
 
-            # Calculate minimum payment: minimum of interest or monthly payment
+            # Calculate the minimum payment (interest + principal repayment)
             minimum_payment = max(monthly_interest_accrued, monthly_payment)
             if loan_amount <= 0:
                 minimum_payment = 0
 
-            # Calculate the minimum monthly payment (just the interest)
+            # Calculate the minimum monthly payment (interest)
             min_monthly_payment = monthly_interest_accrued if loan_amount > 0 else 0
         else:
             monthly_interest_accrued = 0
             minimum_payment = 0
             min_monthly_payment = 0
 
-        # Calculate loan balance as LTV of the total BTC value
+        # Loan balance is calculated as LTV of the BTC value
         loan_balance = total_btc_value * (ltv / 100)
 
-        # Adjust loan balance based on the minimum monthly payment
-        loan_balance -= minimum_payment  # Reduce the loan balance by the payment amount
+        # Update loan balance after subtracting the monthly payment
+        loan_balance -= minimum_payment
         if loan_balance < 0:
             loan_balance = 0  # Ensure the loan balance doesn't go negative
 
