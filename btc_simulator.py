@@ -29,10 +29,12 @@ if run_simulation:
     data = []
     liquidation_triggered = False
     liquidation_month = None
+    total_interest_accrued = 0.0  # Track total interest accrued
 
     for month in range(loan_term + 1):
         total_btc_value = btc_balance * btc_price
-        net_worth = total_btc_value - loan_amount
+        interest_accrued = loan_amount * monthly_interest  # Interest for the month
+        total_interest_accrued += interest_accrued  # Add to total interest
 
         if not liquidation_triggered and total_btc_value < loan_amount:
             liquidation_triggered = True
@@ -44,7 +46,7 @@ if run_simulation:
             "BTC Balance": btc_balance,
             "BTC Value (USD)": total_btc_value,
             "Loan Balance (USD)": loan_amount,
-            "Net Worth (USD)": net_worth,
+            "Interest Accrued (USD)": total_interest_accrued,
             "Liquidation Risk": "⚠️" if total_btc_value < loan_amount else ""
         })
 
@@ -52,7 +54,7 @@ if run_simulation:
         btc_price *= (1 + monthly_price_change / 100)
         btc_balance += monthly_dca
         loan_amount += monthly_withdrawal
-        loan_amount += loan_amount * monthly_interest
+        loan_amount += interest_accrued  # Add interest to loan balance
 
     df = pd.DataFrame(data)
 
@@ -61,10 +63,10 @@ if run_simulation:
     fig, ax = plt.subplots()
     ax.plot(df["Month"], df["BTC Value (USD)"], label="BTC Value", color='orange')
     ax.plot(df["Month"], df["Loan Balance (USD)"], label="Loan Balance", color='red')
-    ax.plot(df["Month"], df["Net Worth (USD)"], label="Net Worth", color='green')
+    ax.plot(df["Month"], df["Interest Accrued (USD)"], label="Interest Accrued", color='blue')
     ax.set_xlabel("Month")
     ax.set_ylabel("USD")
-    ax.set_title("BTC Value vs Loan vs Net Worth")
+    ax.set_title("BTC Value vs Loan vs Interest Accrued")
     ax.legend()
     st.pyplot(fig)
 
@@ -82,7 +84,7 @@ if run_simulation:
             "BTC Price": "${:,.2f}",
             "BTC Value (USD)": "${:,.2f}",
             "Loan Balance (USD)": "${:,.2f}",
-            "Net Worth (USD)": "${:,.2f}"
+            "Interest Accrued (USD)": "${:,.2f}"
         }))
 
     # CSV download
