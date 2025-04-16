@@ -36,7 +36,7 @@ if run_simulation:
     # Set initial BTC balance and loan amount based on LTV
     btc_balance = initial_btc
     initial_btc_price = initial_price
-    loan_amount = btc_balance * initial_btc_price * (ltv / 100)  # Correct loan amount calculation
+    loan_amount = (initial_btc_price * initial_btc) * (ltv / 100)  # Correct loan amount calculation
 
     monthly_interest = interest_rate / 12 / 100
     price_prediction = []
