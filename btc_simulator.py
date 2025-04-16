@@ -30,7 +30,7 @@ ltv = st.sidebar.slider("Loan-to-Value (LTV %)", min_value=0, max_value=100, val
 ltv_liquidation_percentage = st.sidebar.slider("LTV Liquidation Threshold (%)", min_value=0, max_value=100, value=80)
 interest_rate = st.sidebar.number_input("Loan Interest Rate (%)", value=5.0, min_value=0.0)
 loan_term = st.sidebar.number_input("Loan Term (months)", value=12, min_value=1)
-monthly_dca = st.sidebar.number_input("Monthly DCA Amount (BTC)", value=0.01)
+monthly_dca_usd = st.sidebar.number_input("Monthly DCA Amount (USD)", value=500.0)
 monthly_withdrawal = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=500.0)
 monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, min_value=0.0)
 
@@ -97,7 +97,7 @@ if run_simulation:
         # Standard loan logic
         for month in range(loan_term + 1):
             btc_price = price_prediction[month]
-            btc_balance += monthly_dca
+            btc_balance += monthly_dca_usd / btc_price  # Convert DCA from USD to BTC
             total_btc_value = btc_balance * btc_price
             monthly_interest_accrued = loan_amount * monthly_interest
             total_interest_accrued += monthly_interest_accrued
@@ -135,7 +135,7 @@ if run_simulation:
         for month in range(loan_term + 1):
             btc_price = price_prediction[month]
             # Each DCA is treated as an independent loan
-            loan_amount = monthly_dca * btc_price * (ltv / 100)
+            loan_amount = monthly_dca_usd / btc_price * btc_price * (ltv / 100)  # Convert DCA from USD to BTC
             monthly_interest_accrued = loan_amount * monthly_interest
             total_interest_accrued += monthly_interest_accrued
 
