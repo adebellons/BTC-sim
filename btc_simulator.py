@@ -34,9 +34,13 @@ if run_simulation:
         st.sidebar.text("Fetching historical data...")
         data = yf.download('BTC-USD', period="1y", interval="1d")  # Fetch 1 year of historical data
         historical_prices = data['Close']
+        
+        # Check if we successfully fetched the data
+        st.sidebar.text(f"Fetched {len(historical_prices)} days of historical data.")
+        
         pct_changes = historical_prices.pct_change().dropna()
         avg_monthly_pct_change = pct_changes.mean()  # Average monthly price change
-
+        
         st.sidebar.text(f"Avg. Monthly Price Change (from historical data): {avg_monthly_pct_change * 100:.2f}%")
         
         # Predict future prices based on historical average change
