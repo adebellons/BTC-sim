@@ -45,11 +45,17 @@ if run_simulation:
             historical_prices = data['Close']
             pct_changes = historical_prices.pct_change().dropna()
             
-            # Debugging: Check pct_changes
+            # Check if pct_changes is not empty
             if pct_changes.empty:
                 st.error("Error: No percentage changes calculated. Check historical data.")
             else:
-                avg_monthly_pct_change = pct_changes.mean()  # Average monthly price change
+                # Calculate the average percentage change, ensure it's a scalar
+                avg_monthly_pct_change = pct_changes.mean()
+                
+                # Ensure avg_monthly_pct_change is a scalar and not a pandas Series
+                if isinstance(avg_monthly_pct_change, pd.Series):
+                    avg_monthly_pct_change = avg_monthly_pct_change.values[0]
+                
                 st.sidebar.text(f"Avg. Monthly Price Change (from historical data): {avg_monthly_pct_change * 100:.2f}%")
                 
                 # Predict future prices based on historical average change
