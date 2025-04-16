@@ -24,7 +24,7 @@ monthly_dca_usd = st.sidebar.number_input("Monthly DCA Purchase (USD)", value=0.
 use_historical = st.sidebar.checkbox("Use Historical BTC Data for Prediction")
 use_live_price = st.sidebar.checkbox("Use Live BTC Price")
 
-# Run button at the top
+# Run simulation button (placed back to below inputs)
 run_simulation = st.button("Run Simulation")
 
 if run_simulation:
@@ -75,7 +75,6 @@ if run_simulation:
         monthly_interest_accrued = loan_amount * monthly_interest
         total_interest_accrued += monthly_interest_accrued
 
-        # Monthly payment and minimum payment start at month 0 again
         minimum_payment = max(monthly_interest_accrued, monthly_payment)
         if loan_amount <= 0:
             minimum_payment = 0
@@ -99,8 +98,7 @@ if run_simulation:
             "Loan Balance (USD)": round(loan_amount, 2),
             "Monthly Interest": round(monthly_interest_accrued, 2),
             "Interest Accrued (Total)": round(total_interest_accrued, 2),
-            "Monthly Payment": round(monthly_payment, 2),
-            "Minimum Monthly Payment": round(minimum_payment, 2),
+            "Minimum Payment": round(minimum_payment, 2),
             "LTV (%)": round(ltv, 2),
             "Liquidation Risk": liquidation_risk
         })
