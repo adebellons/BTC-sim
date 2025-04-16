@@ -4,7 +4,7 @@ import yfinance as yf
 import numpy as np
 
 st.set_page_config(page_title="BTC Sim", layout="wide")
-st.title("BTC Sim")
+st.title("BTC Loan Leverage Simulator")
 
 # Sidebar inputs
 st.sidebar.header("Simulation Inputs")
