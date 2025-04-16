@@ -33,24 +33,33 @@ if run_simulation:
     if use_historical_data:
         st.sidebar.text("Fetching historical data...")
         data = yf.download('BTC-USD', period="1y", interval="1d")  # Fetch 1 year of historical data
-        historical_prices = data['Close']
         
-        # Check if we successfully fetched the data
-        st.sidebar.text(f"Fetched {len(historical_prices)} days of historical data.")
-        
-        pct_changes = historical_prices.pct_change().dropna()
-        avg_monthly_pct_change = pct_changes.mean()  # Average monthly price change
-        
-        st.sidebar.text(f"Avg. Monthly Price Change (from historical data): {avg_monthly_pct_change * 100:.2f}%")
-        
-        # Predict future prices based on historical average change
-        price_prediction = []
-        for month in range(loan_term + 1):
-            btc_price *= (1 + avg_monthly_pct_change)  # Predict next month's price based on historical change
-            price_prediction.append(btc_price)
+        # Debugging: Check if data is returned
+        if data.empty:
+            st.error("Error: No data returned from Yahoo Finance. Please check the data source.")
+        else:
+            # Display a preview of the data to verify
+            st.sidebar.text(f"Fetched {len(data)} days of historical data.")
+            st.sidebar.text(f"Data preview:\n{data.head()}")
 
-        # Use the predicted price for the simulation
-        btc_price = price_prediction[0]
+            historical_prices = data['Close']
+            pct_changes = historical_prices.pct_change().dropna()
+            
+            # Debugging: Check pct_changes
+            if pct_changes.empty:
+                st.error("Error: No percentage changes calculated. Check historical data.")
+            else:
+                avg_monthly_pct_change = pct_changes.mean()  # Average monthly price change
+                st.sidebar.text(f"Avg. Monthly Price Change (from historical data): {avg_monthly_pct_change * 100:.2f}%")
+                
+                # Predict future prices based on historical average change
+                price_prediction = []
+                for month in range(loan_term + 1):
+                    btc_price *= (1 + avg_monthly_pct_change)  # Predict next month's price based on historical change
+                    price_prediction.append(btc_price)
+
+                # Use the predicted price for the simulation
+                btc_price = price_prediction[0]
     
     else:
         # If historical data is not used, simulate a manual monthly price change
