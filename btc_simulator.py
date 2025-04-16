@@ -34,12 +34,11 @@ monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, mi
 run_simulation = st.sidebar.button("Run Simulation")
 
 if run_simulation:
-    btc_price = initial_price
+    # Set initial BTC balance and loan amount based on LTV
     btc_balance = initial_btc
+    initial_btc_price = initial_price
+    loan_amount = btc_balance * initial_btc_price * (ltv / 100)  # Correct loan amount calculation
 
-    # Initial Loan Amount calculation based on LTV ratio
-    loan_amount = initial_btc * btc_price * (ltv / 100)
-    
     monthly_interest = interest_rate / 12 / 100
     price_prediction = []
 
@@ -54,20 +53,19 @@ if run_simulation:
                     avg_pct_change = pct_changes.mean()
                     if isinstance(avg_pct_change, pd.Series):
                         avg_pct_change = avg_pct_change.values[0]
-                    btc_price = live_price
+                    initial_btc_price = live_price
                     for _ in range(loan_term):
-                        btc_price *= (1 + avg_pct_change)
-                        price_prediction.append(float(btc_price))
+                        initial_btc_price *= (1 + avg_pct_change)
+                        price_prediction.append(float(initial_btc_price))
         else:
             monthly_price_change = st.sidebar.number_input("BTC Monthly Price Change (%)", value=2.0)
-            btc_price = live_price
+            initial_btc_price = live_price
             for _ in range(loan_term):
-                btc_price *= (1 + monthly_price_change / 100)
-                price_prediction.append(float(btc_price))
+                initial_btc_price *= (1 + monthly_price_change / 100)
+                price_prediction.append(float(initial_btc_price))
 
     elif use_historical_data:
-        btc_price = initial_price
-        price_prediction.append(btc_price)
+        price_prediction.append(initial_btc_price)
         data = yf.download('BTC-USD', period="5y", interval="1d")
         if not data.empty:
             pct_changes = data['Close'].pct_change().dropna()
@@ -76,20 +74,21 @@ if run_simulation:
                 if isinstance(avg_pct_change, pd.Series):
                     avg_pct_change = avg_pct_change.values[0]
                 for _ in range(loan_term):
-                    btc_price *= (1 + avg_pct_change)
-                    price_prediction.append(float(btc_price))
+                    initial_btc_price *= (1 + avg_pct_change)
+                    price_prediction.append(float(initial_btc_price))
 
     else:
-        btc_price = initial_price
-        price_prediction.append(btc_price)
+        price_prediction.append(initial_btc_price)
         monthly_price_change = st.sidebar.number_input("BTC Monthly Price Change (%)", value=2.0)
         for _ in range(loan_term):
-            btc_price *= (1 + monthly_price_change / 100)
-            price_prediction.append(float(btc_price))
+            initial_btc_price *= (1 + monthly_price_change / 100)
+            price_prediction.append(float(initial_btc_price))
 
+    # Fill the price prediction list if not long enough
     while len(price_prediction) < loan_term + 1:
         price_prediction.append(price_prediction[-1])
 
+    # Initialize data list for simulation results
     data = []
     total_interest_accrued = 0.0
 
