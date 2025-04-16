@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import yfinance as yf
+import numpy as np
 
 st.set_page_config(page_title="BTC Sim", layout="wide")
 st.title("BTC Sim")
@@ -12,10 +14,11 @@ ltv = st.sidebar.slider("Loan-to-Value (LTV %)", min_value=0, max_value=100, val
 ltv_liquidation_percentage = st.sidebar.slider("LTV Liquidation Threshold (%)", min_value=0, max_value=100, value=80)  # New slider
 interest_rate = st.sidebar.number_input("Loan Interest Rate (%)", value=5.0, min_value=0.0)
 loan_term = st.sidebar.number_input("Loan Term (months)", value=12, min_value=1)
-monthly_price_change = st.sidebar.number_input("BTC Monthly Price Change (%)", value=2.0)
 monthly_dca = st.sidebar.number_input("Monthly DCA Amount (BTC)", value=0.01)
 monthly_withdrawal = st.sidebar.number_input("Monthly Income Withdrawal (USD)", value=500.0)
 monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, min_value=0.0)  # New input
+
+use_historical_data = st.sidebar.checkbox("Use Historical Bitcoin Price Data for Prediction")
 
 run_simulation = st.sidebar.button("Run Simulation")
 
@@ -25,6 +28,33 @@ if run_simulation:
     btc_balance = initial_btc
     loan_amount = initial_btc * initial_price * (ltv / 100)
     monthly_interest = interest_rate / 12 / 100
+    
+    # Fetch historical data if required
+    if use_historical_data:
+        st.sidebar.text("Fetching historical data...")
+        data = yf.download('BTC-USD', period="1y", interval="1d")  # Fetch 1 year of historical data
+        historical_prices = data['Close']
+        pct_changes = historical_prices.pct_change().dropna()
+        avg_monthly_pct_change = pct_changes.mean()  # Average monthly price change
+
+        st.sidebar.text(f"Avg. Monthly Price Change (from historical data): {avg_monthly_pct_change * 100:.2f}%")
+        
+        # Predict future prices based on historical average change
+        price_prediction = []
+        for month in range(loan_term + 1):
+            btc_price *= (1 + avg_monthly_pct_change)  # Predict next month's price based on historical change
+            price_prediction.append(btc_price)
+
+        # Use the predicted price for the simulation
+        btc_price = price_prediction[0]
+    
+    else:
+        # If historical data is not used, simulate a manual monthly price change
+        monthly_price_change = st.sidebar.number_input("BTC Monthly Price Change (%)", value=2.0)
+        price_prediction = [btc_price]
+        for month in range(loan_term + 1):
+            btc_price *= (1 + monthly_price_change / 100)  # Simulate price change based on user input
+            price_prediction.append(btc_price)
 
     # Tracking
     data = []
@@ -33,7 +63,7 @@ if run_simulation:
     total_interest_accrued = 0.0  # Track total interest accrued
 
     for month in range(loan_term + 1):
-        total_btc_value = btc_balance * btc_price
+        total_btc_value = btc_balance * price_prediction[month]
         monthly_interest_accrued = loan_amount * monthly_interest  # Monthly interest for the month
         total_interest_accrued += monthly_interest_accrued  # Add to total interest
 
@@ -56,7 +86,7 @@ if run_simulation:
 
         data.append({
             "Month": month,
-            "BTC Price": btc_price,
+            "BTC Price": price_prediction[month],
             "BTC Balance": btc_balance,
             "BTC Value (USD)": total_btc_value,
             "Loan Balance (USD)": loan_amount,
@@ -67,8 +97,6 @@ if run_simulation:
         })
 
         # Simulate next month
-        btc_price *= (1 + monthly_price_change / 100)
-        btc_balance += monthly_dca
         loan_amount += monthly_withdrawal
         loan_amount += monthly_interest_accrued  # Add interest to loan balance
 
