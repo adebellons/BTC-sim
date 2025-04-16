@@ -47,6 +47,11 @@ monthly_income_draw = st.sidebar.number_input("Monthly Income Withdrawal (USD)",
 minimum_monthly_payment = st.sidebar.number_input("Minimum Monthly Payment (USD)", value=0, step=50)
 simulation_months = st.sidebar.slider("Simulation Length (Months)", 12, 60, 36)
 
+# Library versions for debugging
+with st.sidebar.expander("📦 Library Versions"):
+    st.write(f"Streamlit: {st.__version__}")
+    st.write(f"Pandas: {pd.__version__}")
+
 # Simulate BTC price using a geometric growth model
 def simulate_btc_price(months, start_price, annual_growth=0.1, volatility=0.2):
     monthly_growth = (1 + annual_growth) ** (1/12) - 1
@@ -62,7 +67,17 @@ elif btc_price_mode == "Flat Growth":
     monthly_growth = (1 + btc_annual_growth) ** (1/12) - 1
     btc_prices = [starting_price * (1 + monthly_growth) ** i for i in range(simulation_months)]
 else:
-    btc_prices = [starting_price for _ in range(simulation_months)]
+    try:
+        days_needed = simulation_months * 30
+        url = f"https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days={days_needed}&interval=daily"
+        response = requests.get(url)
+        response.raise_for_status()
+        prices_raw = response.json()["prices"]
+        daily_prices = [price[1] for price in prices_raw]
+        btc_prices = [daily_prices[i * 30] for i in range(simulation_months)]
+    except Exception:
+        st.sidebar.error("⚠️ Failed to fetch historical data. Using flat BTC price as fallback.")
+        btc_prices = [starting_price for _ in range(simulation_months)]
 
 # --- Simulation Logic ---
 btc_holdings = starting_btc
@@ -85,8 +100,12 @@ for month in range(simulation_months):
     if simulation_mode == "Standard Loan":
         loan_balance *= (1 + loan_interest_rate / 12)
         loan_balance += monthly_income_draw
-        loan_opened_months.append(1)
-        loan_age_months.append(month + 1)
+        min_payment = max(loan_balance * (loan_interest_rate / 12), minimum_monthly_payment)
+        loan_balance -= min_payment
+
+    loan_opened_months.append(1)
+    loan_age_months.append(month + 1)
+
     else:
         new_loan = btc_dca * price * ltv_ratio
         independent_loans.append({
@@ -99,6 +118,8 @@ for month in range(simulation_months):
             if loan["start_month"] < (month + 1):
                 loan["age"] += 1
             loan["balance"] *= (1 + loan_interest_rate / 12)
+            min_payment = max(loan["balance"] * (loan_interest_rate / 12), minimum_monthly_payment)
+            loan["balance"] -= min_payment
         loan_balance = sum(loan["balance"] for loan in independent_loans) + monthly_income_draw
 
         for loan in independent_loans:
@@ -135,8 +156,6 @@ liquidation_risks = ["Yes" if ltv_percentages[i] >= liquidation_ltv else "No" fo
 # Main Summary Table
 if simulation_mode == "Standard Loan":
     data = pd.DataFrame({
-        'Loan # (Opened in Month)': loan_opened_months,
-        'Month of This Loan': loan_age_months,
         'Overall Month': overall_months,
         'BTC Price Now': [f"{p:,.2f}" for p in btc_prices],
         'BTC Collateral': [f"{h:.6f}" for h in btc_holdings_over_time],
@@ -153,7 +172,7 @@ else:
     data["Overall Month"] = data["Overall Month"].astype(int)
     data = data.sort_values(by="Overall Month").reset_index(drop=True)
 
-st.subheader("🗕️ Monthly Breakdown")
+st.subheader("🗅️ Monthly Breakdown")
 st.dataframe(data, use_container_width=True)
 
 # --- BTC Price Chart ---
