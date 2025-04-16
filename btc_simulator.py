@@ -46,9 +46,9 @@ if run_simulation:
 
         # Calculate liquidation risk based on LTV liquidation percentage
         if total_btc_value < loan_amount * (ltv_liquidation_percentage / 100):
-            liquidation_risk = f"⚠️ Liquidation risk (below {ltv_liquidation_percentage}% LTV)"
+            liquidation_risk = "Yes"
         else:
-            liquidation_risk = ""
+            liquidation_risk = "No"
 
         if not liquidation_triggered and total_btc_value < loan_amount:
             liquidation_triggered = True
