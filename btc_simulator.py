@@ -36,10 +36,11 @@ monthly_withdrawal = st.sidebar.number_input("Monthly Income Withdrawal (USD)", 
 monthly_payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0, min_value=0.0)
 
 if run_simulation:
+    # Initial values and setup
     btc_price = initial_price
     btc_balance = initial_btc
-    # Initial loan balance based on LTV: BTC amount * BTC price * LTV %
-    loan_amount = initial_btc * btc_price * (ltv / 100)
+    loan_balance = initial_btc * btc_price * (ltv / 100)  # Initial loan balance based on LTV
+    loan_amount = loan_balance  # This is the amount we are borrowing (LTV based)
     monthly_interest = interest_rate / 12 / 100
     price_prediction = []
 
@@ -90,6 +91,7 @@ if run_simulation:
     while len(price_prediction) < loan_term + 1:
         price_prediction.append(price_prediction[-1])
 
+    # Prepare the data structure to hold the simulation results
     data = []
     total_interest_accrued = 0.0
 
@@ -108,13 +110,9 @@ if run_simulation:
             minimum_payment = max(monthly_interest_accrued, monthly_payment)
             if loan_amount <= 0:
                 minimum_payment = 0
-
-            # Calculate the minimum monthly payment (interest)
-            min_monthly_payment = monthly_interest_accrued if loan_amount > 0 else 0
         else:
             monthly_interest_accrued = 0
             minimum_payment = 0
-            min_monthly_payment = 0
 
         # Loan balance is calculated as LTV of the BTC value
         loan_balance = total_btc_value * (ltv / 100)
@@ -130,11 +128,13 @@ if run_simulation:
         if loan_amount < 0:
             loan_amount = 0
 
+        # Liquidation risk calculation
         if total_btc_value < loan_balance * (ltv_liquidation_percentage / 100):
             liquidation_risk = "Yes"
         else:
             liquidation_risk = "No"
 
+        # Append monthly data to the results
         data.append({
             "Month": month,
             "BTC Price": btc_price,
@@ -144,10 +144,10 @@ if run_simulation:
             "Interest Accrued (USD)": total_interest_accrued,
             "Monthly Interest (USD)": monthly_interest_accrued,
             "Monthly Payment (USD)": minimum_payment,
-            "Minimum Monthly Payment (USD)": min_monthly_payment,
             "Liquidation Risk": liquidation_risk
         })
 
+    # Convert the data to a dataframe for display
     df = pd.DataFrame(data)
 
     st.subheader("Simulation Results")
@@ -157,10 +157,10 @@ if run_simulation:
         "Loan Balance (USD)": "${:,.2f}",
         "Interest Accrued (USD)": "${:,.2f}",
         "Monthly Interest (USD)": "${:,.2f}",
-        "Monthly Payment (USD)": "${:,.2f}",
-        "Minimum Monthly Payment (USD)": "${:,.2f}"
+        "Monthly Payment (USD)": "${:,.2f}"
     }))
 
+    # CSV Download Button
     csv = df.to_csv(index=False).encode('utf-8')
     st.download_button("Download CSV", csv, "btc_sim_results.csv", "text/csv")
 
