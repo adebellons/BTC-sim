@@ -132,11 +132,10 @@ if run_sim:
 
             for loan in active_loans:
                 if m >= loan['start_month']:
-                    relative_month = m - loan['start_month'] + 1
                     num_active_loans = len([l for l in active_loans if m > l['start_month']])
                     monthly_share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
 
-                    if relative_month == 1:
+                    if m == loan['start_month']:
                         interest = 0.0
                         total_payment = 0.0
                     else:
@@ -152,7 +151,7 @@ if run_sim:
                     at_risk = "Yes" if ltv_percent > liq_threshold else "No"
 
                     loan_history.append({
-                        "Month": relative_month,
+                        "Month": m,
                         "Loan #": loan['loan_id'],
                         "BTC Price (USD)": price,
                         "Collateral Value (USD)": loan['btc_collateral'] * price,
