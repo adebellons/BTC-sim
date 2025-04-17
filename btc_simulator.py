@@ -3,13 +3,29 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
-# Simulate the DCA loan chart (replace this with your actual logic)
-def simulate_dca_loan_chart(...):
-    # Your simulation logic here
-    return pd.DataFrame()  # Replace with actual DataFrame
+# Simulate the DCA loan chart
+def simulate_dca_loan_chart(
+    btc_prices,
+    dca_amount_usd,
+    ltv,
+    interest_rate,
+    monthly_payment_pct
+):
+    # Example logic for generating DCA loan chart (replace with actual simulation)
+    data = {
+        "Date": pd.date_range(start="2023-01-01", periods=12, freq="M"),
+        "Collateral Value (USD)": np.random.rand(12) * 10000,  # Random data for example
+        "Loan Balance (USD)": np.random.rand(12) * 5000,  # Random data for example
+        "Interest Accrued (Total)": np.random.rand(12) * 100,  # Random data for example
+        "Monthly Payment": np.random.rand(12) * 50,  # Random data for example
+        "Total Loan Balance (USD)": np.random.rand(12) * 5000,  # Random data for example
+        "BTC Price (USD)": np.random.rand(12) * 40000,  # Random data for example
+        "LTV %": np.random.rand(12) * 100  # Random data for example
+    }
+    return pd.DataFrame(data)
 
 # Assume this returns your DCA loan chart
-btc_prices = ...  # Define or fetch BTC prices
+btc_prices = np.random.rand(12) * 40000  # Replace with actual BTC prices or method to fetch them
 
 dca_amount_usd = 500  # Example DCA amount
 ltv = 0.5
