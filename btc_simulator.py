@@ -37,6 +37,13 @@ else:
 
 run_sim = st.button("Run Simulation")
 
+# Safe formatting function to handle non-numeric data
+def safe_format(val):
+    try:
+        return "{:,.2f}".format(float(val)) if isinstance(val, (int, float)) else val
+    except (ValueError, TypeError):
+        return val
+
 if run_sim:
     months = simulation_months
     prices = [btc_price * (1 + 0.02)**(i / 12) for i in range(months + 1)]
@@ -85,24 +92,17 @@ if run_sim:
 
         df = pd.DataFrame(rows)
 
-        # Show only the last row for each month in 'Total Loan Balance (USD)'
-        df["Is Month End"] = df["Month"] != df["Month"].shift(-1)
-        df["Total Loan Balance (USD) Display"] = df.apply(
-            lambda row: row["Total Loan Balance (USD)"] if row["Is Month End"] else "",
-            axis=1
-        )
+        # Apply safe_format function to relevant columns
+        df["BTC Price (USD)"] = df["BTC Price (USD)"].apply(safe_format)
+        df["Collateral Value (USD)"] = df["Collateral Value (USD)"].apply(safe_format)
+        df["Loan Balance (USD)"] = df["Loan Balance (USD)"].apply(safe_format)
+        df["Interest Accrued (Total)"] = df["Interest Accrued (Total)"].apply(safe_format)
+        df["Monthly Payment"] = df["Monthly Payment"].apply(safe_format)
+        df["LTV %"] = df["LTV %"].apply(safe_format)
+        df["Total Loan Balance (USD)"] = df["Total Loan Balance (USD)"].apply(safe_format)
 
         st.subheader("Simulation Results")
-        st.dataframe(df.style.format({
-            "BTC Price (USD)": "${:,.2f}",
-            "Collateral Value (USD)": "${:,.2f}",
-            "Loan Balance (USD)": "${:,.2f}",
-            "Interest Accrued (Total)": "${:,.2f}",
-            "Monthly Interest": "${:,.2f}",
-            "Monthly Payment": "${:,.2f}",
-            "LTV %": "{:.2f}%",
-            "Total Loan Balance (USD) Display": "${:,.2f}"
-        }), use_container_width=True)
+        st.dataframe(df, use_container_width=True)
 
     else:
         loan_history = []
@@ -180,21 +180,15 @@ if run_sim:
         filtered_loan_history = [entry for entry in loan_history if entry['Loan Balance (USD)'] > 0]
 
         dca_df = pd.DataFrame(filtered_loan_history)
-        
-        # Show only the last row for each month in 'Total Loan Balance (USD)'
-        dca_df["Is Month End"] = dca_df["Month"] != dca_df["Month"].shift(-1)
-        dca_df["Total Loan Balance (USD) Display"] = dca_df.apply(
-            lambda row: row["Total Loan Balance (USD)"] if row["Is Month End"] else "",
-            axis=1
-        )
+
+        # Apply safe_format function to relevant columns
+        dca_df["BTC Price (USD)"] = dca_df["BTC Price (USD)"].apply(safe_format)
+        dca_df["Collateral Value (USD)"] = dca_df["Collateral Value (USD)"].apply(safe_format)
+        dca_df["Loan Balance (USD)"] = dca_df["Loan Balance (USD)"].apply(safe_format)
+        dca_df["Interest Accrued (Total)"] = dca_df["Interest Accrued (Total)"].apply(safe_format)
+        dca_df["Monthly Payment"] = dca_df["Monthly Payment"].apply(safe_format)
+        dca_df["LTV %"] = dca_df["LTV %"].apply(safe_format)
+        dca_df["Total Loan Balance (USD)"] = dca_df["Total Loan Balance (USD)"].apply(safe_format)
 
         st.subheader("DCA Independent Loan Snapshots")
-        st.dataframe(dca_df.style.format({
-            "BTC Price (USD)": "${:,.2f}",
-            "Collateral Value (USD)": "${:,.2f}",
-            "Loan Balance (USD)": "${:,.2f}",
-            "Interest Accrued (Total)": "${:,.2f}",
-            "Monthly Payment": "${:,.2f}",
-            "LTV %": "{:.2f}%",
-            "Total Loan Balance (USD) Display": "${:,.2f}"
-        }), use_container_width=True)
+        st.dataframe(dca_df, use_container_width=True)
