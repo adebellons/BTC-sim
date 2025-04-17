@@ -128,6 +128,8 @@ if run_sim:
             }
             active_loans.append(new_loan)
 
+            total_loan_balance = 0.0
+
             for loan in active_loans:
                 if m >= loan['start_month']:
                     relative_month = m - loan['start_month'] + 1
@@ -144,6 +146,8 @@ if run_sim:
                         loan['loan_balance'] = max(loan['loan_balance'], 0.0)
                         total_payment = loan['payment'] + monthly_share_payment
 
+                    total_loan_balance += loan['loan_balance']
+
                     ltv_percent = loan['loan_balance'] / (loan['btc_collateral'] * price) * 100
                     at_risk = "Yes" if ltv_percent > liq_threshold else "No"
 
@@ -156,7 +160,8 @@ if run_sim:
                         "Interest Accrued (Total)": loan['interest_accrued'],
                         "Monthly Payment": total_payment,
                         "LTV %": ltv_percent,
-                        "At Risk of Liquidation": at_risk
+                        "At Risk of Liquidation": at_risk,
+                        "Total Loan Balance (USD)": total_loan_balance
                     })
 
         dca_df = pd.DataFrame(loan_history)
@@ -167,5 +172,6 @@ if run_sim:
             "Loan Balance (USD)": "${:,.2f}",
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
-            "LTV %": "{:.2f}%"
+            "LTV %": "{:.2f}%",
+            "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
