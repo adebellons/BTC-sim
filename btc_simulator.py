@@ -80,7 +80,7 @@ if run_sim:
                 "Monthly Payment": actual_payment,
                 "LTV %": curr_ltv,
                 "At Risk of Liquidation": risk,
-                "Total Loan Balance (USD)": loan_balance  # Initially it's just the loan balance
+                "Total Loan Balance (USD)": loan_balance if loan_balance > 0 else ""  # Ensure no NaN values
             })
 
         df = pd.DataFrame(rows)
@@ -95,7 +95,7 @@ if run_sim:
             "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%",
             "Total Loan Balance (USD)": "${:,.2f}"
-        }), use_container_width=True)
+        }).hide_columns(["Total Loan Balance (USD)"]) if df["Total Loan Balance (USD)"].isna().all() else df, use_container_width=True)
 
     else:
         loan_history = []
