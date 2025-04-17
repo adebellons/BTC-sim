@@ -151,20 +151,25 @@ if run_sim:
                     ltv_percent = loan['loan_balance'] / (loan['btc_collateral'] * price) * 100
                     at_risk = "Yes" if ltv_percent > liq_threshold else "No"
 
-                    loan_history.append({
-                        "Month": m,
-                        "Loan #": loan['loan_id'],
-                        "BTC Price (USD)": price,
-                        "Collateral Value (USD)": loan['btc_collateral'] * price,
-                        "Loan Balance (USD)": loan['loan_balance'],
-                        "Total Loan Balance (USD)": total_loan_balance,  # Moved this column here
-                        "Interest Accrued (Total)": loan['interest_accrued'],
-                        "Monthly Payment": total_payment,
-                        "LTV %": ltv_percent,
-                        "At Risk of Liquidation": at_risk
-                    })
+                    # Only add to history if the loan balance is greater than 0
+                    if loan['loan_balance'] > 0:
+                        loan_history.append({
+                            "Month": m,
+                            "Loan #": loan['loan_id'],
+                            "BTC Price (USD)": price,
+                            "Collateral Value (USD)": loan['btc_collateral'] * price,
+                            "Loan Balance (USD)": loan['loan_balance'],
+                            "Total Loan Balance (USD)": total_loan_balance,  # Moved this column here
+                            "Interest Accrued (Total)": loan['interest_accrued'],
+                            "Monthly Payment": total_payment,
+                            "LTV %": ltv_percent,
+                            "At Risk of Liquidation": at_risk
+                        })
 
-        dca_df = pd.DataFrame(loan_history)
+        # Remove rows where loan balance is 0 for all loans
+        filtered_loan_history = [entry for entry in loan_history if entry['Loan Balance (USD)'] > 0]
+
+        dca_df = pd.DataFrame(filtered_loan_history)
         st.subheader("DCA Independent Loan Snapshots")
         st.dataframe(dca_df.style.format({
             "BTC Price (USD)": "${:,.2f}",
