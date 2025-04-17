@@ -51,6 +51,7 @@ if run_sim:
         interest_accrued = 0.0
 
         rows = []
+        total_loan_balances = []  # To track the total loan balance for each month
 
         for m in range(months + 1):
             price_idx = prices[m]
@@ -75,13 +76,15 @@ if run_sim:
                 "BTC Price (USD)": price_idx,
                 "Collateral Value (USD)": btc_value,
                 "Loan Balance (USD)": loan_balance,
-                "Total Loan Balance (USD)": loan_balance,  # Now on the right of Loan Balance
                 "Interest Accrued (Total)": interest_accrued,
                 "Monthly Interest": monthly_interest,
                 "Monthly Payment": actual_payment,
                 "LTV %": curr_ltv,
-                "At Risk of Liquidation": risk
+                "At Risk of Liquidation": risk,
+                "Total Loan Balance (USD)": loan_balance  # Initially it's just the loan balance
             })
+
+            total_loan_balances.append(loan_balance)  # Add the total loan balance for this month
 
         df = pd.DataFrame(rows)
 
@@ -90,16 +93,21 @@ if run_sim:
             "BTC Price (USD)": "${:,.2f}",
             "Collateral Value (USD)": "${:,.2f}",
             "Loan Balance (USD)": "${:,.2f}",
-            "Total Loan Balance (USD)": "${:,.2f}",  # Updated formatting for the moved column
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Interest": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%",
+            "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
+
+        # Display the total loan balance chart
+        st.subheader("Total Loan Balance Over Time")
+        st.line_chart(total_loan_balances)  # Plotting the total loan balance
 
     else:
         loan_history = []
         active_loans = []
+        total_loan_balances_dca = []  # To track the total loan balance for each month (DCA mode)
 
         for m in range(1, months + 1):
             price = prices[m]
@@ -162,25 +170,30 @@ if run_sim:
                             "BTC Price (USD)": price,
                             "Collateral Value (USD)": loan['btc_collateral'] * price,
                             "Loan Balance (USD)": loan['loan_balance'],
-                            "Total Loan Balance (USD)": total_loan_balance,  # Moved column here
                             "Interest Accrued (Total)": loan['interest_accrued'],
                             "Monthly Payment": total_payment,
                             "LTV %": ltv_percent,
-                            "At Risk of Liquidation": at_risk
+                            "At Risk of Liquidation": at_risk,
+                            "Total Loan Balance (USD)": total_loan_balance  # Show total loan balance for this month
                         })
+
+            total_loan_balances_dca.append(total_loan_balance)  # Add the total loan balance for DCA mode
 
         # Remove rows where loan balance is 0 for all loans
         filtered_loan_history = [entry for entry in loan_history if entry['Loan Balance (USD)'] > 0]
 
         dca_df = pd.DataFrame(filtered_loan_history)
-
         st.subheader("DCA Independent Loan Snapshots")
         st.dataframe(dca_df.style.format({
             "BTC Price (USD)": "${:,.2f}",
             "Collateral Value (USD)": "${:,.2f}",
             "Loan Balance (USD)": "${:,.2f}",
-            "Total Loan Balance (USD)": "${:,.2f}",  # Updated formatting for the moved column
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%",
+            "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
+
+        # Display the total loan balance chart (DCA mode)
+        st.subheader("Total Loan Balance Over Time (DCA Mode)")
+        st.line_chart(total_loan_balances_dca)  # Plotting the total loan balance for DCA mode
