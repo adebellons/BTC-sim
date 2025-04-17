@@ -12,7 +12,6 @@ initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0)
 ltv = st.sidebar.slider("Initial Loan-to-Value (LTV) %", min_value=0, max_value=100, value=50)
 liq_threshold = st.sidebar.slider("Liquidation Threshold LTV %", 1, 100, 85)
 interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0)
-payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0)
 
 simulation_months = st.sidebar.slider("Simulation Duration (Months)", 12, 120, 36)
 
@@ -37,6 +36,7 @@ if run_sim:
         loan_balance = initial_btc * btc_price * ltv / 100
         btc_amount = initial_btc
         interest_accrued = 0.0
+        payment = 0.0  # Since we removed the input from the panel
 
         rows = []
 
