@@ -75,12 +75,12 @@ if run_sim:
                 "BTC Price (USD)": price_idx,
                 "Collateral Value (USD)": btc_value,
                 "Loan Balance (USD)": loan_balance,
+                "Total Loan Balance (USD)": loan_balance,  # Now on the right of Loan Balance
                 "Interest Accrued (Total)": interest_accrued,
                 "Monthly Interest": monthly_interest,
                 "Monthly Payment": actual_payment,
                 "LTV %": curr_ltv,
-                "At Risk of Liquidation": risk,
-                "Total Loan Balance (USD)": loan_balance  # Initially it's just the loan balance
+                "At Risk of Liquidation": risk
             })
 
         df = pd.DataFrame(rows)
@@ -90,11 +90,11 @@ if run_sim:
             "BTC Price (USD)": "${:,.2f}",
             "Collateral Value (USD)": "${:,.2f}",
             "Loan Balance (USD)": "${:,.2f}",
+            "Total Loan Balance (USD)": "${:,.2f}",  # Updated formatting for the moved column
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Interest": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%",
-            "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
 
     else:
@@ -162,11 +162,11 @@ if run_sim:
                             "BTC Price (USD)": price,
                             "Collateral Value (USD)": loan['btc_collateral'] * price,
                             "Loan Balance (USD)": loan['loan_balance'],
+                            "Total Loan Balance (USD)": total_loan_balance,  # Moved column here
                             "Interest Accrued (Total)": loan['interest_accrued'],
                             "Monthly Payment": total_payment,
                             "LTV %": ltv_percent,
-                            "At Risk of Liquidation": at_risk,
-                            "Total Loan Balance (USD)": total_loan_balance  # Show total loan balance for this month
+                            "At Risk of Liquidation": at_risk
                         })
 
         # Remove rows where loan balance is 0 for all loans
@@ -179,8 +179,8 @@ if run_sim:
             "BTC Price (USD)": "${:,.2f}",
             "Collateral Value (USD)": "${:,.2f}",
             "Loan Balance (USD)": "${:,.2f}",
+            "Total Loan Balance (USD)": "${:,.2f}",  # Updated formatting for the moved column
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%",
-            "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
