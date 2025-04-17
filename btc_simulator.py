@@ -88,16 +88,24 @@ if run_sim:
 
         df = pd.DataFrame(rows)
 
+        # Reorder columns so that "Total Loan Balance (USD)" comes after "Loan Balance (USD)"
+        df = df[[
+            "Month", "BTC Price (USD)", "Collateral Value (USD)", "Loan Balance (USD)", 
+            "Total Loan Balance (USD)", "Interest Accrued (Total)", "Monthly Interest", 
+            "Monthly Payment", "LTV %", "At Risk of Liquidation"
+        ]]
+
         st.subheader("Simulation Results")
         st.dataframe(df.style.format({
             "BTC Price (USD)": "${:,.2f}",
             "Collateral Value (USD)": "${:,.2f}",
             "Loan Balance (USD)": "${:,.2f}",
+            "Total Loan Balance (USD)": "${:,.2f}",
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Interest": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%",
-            "Total Loan Balance (USD)": "${:,.2f}"
+            "At Risk of Liquidation": "{:,.2f}"
         }), use_container_width=True)
 
         # Display the total loan balance as a table
