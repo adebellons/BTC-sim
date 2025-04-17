@@ -8,7 +8,15 @@ st.title("BTC Loan Leverage Simulator")
 # --- Sidebar settings ---
 st.sidebar.header("Simulation Settings")
 
-initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0)
+collateral_type = st.sidebar.radio("Select Initial Collateral Type", ("BTC", "USD"))
+
+if collateral_type == "BTC":
+    initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0)
+    initial_usd = None
+else:
+    initial_usd = st.sidebar.number_input("Initial USD Collateral Amount", value=30000.0)
+    initial_btc = None
+
 ltv = st.sidebar.slider("Initial Loan-to-Value (LTV) %", min_value=0, max_value=100, value=50)
 liq_threshold = st.sidebar.slider("Liquidation Threshold LTV %", 1, 100, 85)
 interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0)
@@ -34,8 +42,12 @@ if run_sim:
     prices = [btc_price * (1 + 0.02)**(i / 12) for i in range(months + 1)]
 
     if not dca_mode:
-        loan_balance = initial_btc * btc_price * ltv / 100
-        btc_amount = initial_btc
+        if initial_btc is not None:
+            btc_amount = initial_btc
+        else:
+            btc_amount = initial_usd / btc_price
+
+        loan_balance = btc_amount * btc_price * ltv / 100
         interest_accrued = 0.0
 
         rows = []
