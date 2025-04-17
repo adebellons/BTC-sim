@@ -105,7 +105,7 @@ if run_sim:
         for m in range(1, months + 1):
             price = prices[m]
             btc_purchased = dca_amount / price
-            collateral_value = btc_purchased * price  # No subtraction in the first month for each loan
+            collateral_value = btc_purchased * price  # Direct collateral value for month 1
             loan_amount = collateral_value * ltv / 100
             monthly_interest_rate = (interest_rate / 100) / 12
 
