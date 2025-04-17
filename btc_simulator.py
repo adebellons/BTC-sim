@@ -45,7 +45,7 @@ if run_sim:
         if initial_btc is not None:
             btc_amount = initial_btc
         else:
-            btc_amount = initial_usd / btc_price
+            btc_amount = initial_usd / btc_price  # Convert USD collateral to BTC
 
         loan_balance = btc_amount * btc_price * ltv / 100
         interest_accrued = 0.0
@@ -104,8 +104,15 @@ if run_sim:
 
         for m in range(1, months + 1):
             price = prices[m]
-            btc_purchased = dca_amount / price
-            collateral_value = btc_purchased * price  # Direct collateral value for month 1
+            if m == 1:
+                # First loan, use initial USD collateral to purchase BTC
+                btc_purchased = initial_usd / price  # Convert the initial USD to BTC
+                collateral_value = initial_usd  # Collateral value is the initial USD amount
+            else:
+                # For subsequent loans, use DCA to purchase BTC
+                btc_purchased = dca_amount / price
+                collateral_value = btc_purchased * price  # Actual collateral value in USD
+
             loan_amount = collateral_value * ltv / 100
             monthly_interest_rate = (interest_rate / 100) / 12
 
@@ -149,7 +156,7 @@ if run_sim:
                             "Month": m,
                             "Loan #": loan['loan_id'],
                             "BTC Price (USD)": price,
-                            "Collateral Value (USD)": loan['btc_collateral'] * price,  # Month 1 collateral
+                            "Collateral Value (USD)": collateral_value,  # Corrected for Month 1
                             "Loan Balance (USD)": loan['loan_balance'],
                             "Interest Accrued (Total)": loan['interest_accrued'],
                             "Monthly Payment": loan['payment'] + monthly_share_payment,
