@@ -80,12 +80,14 @@ if run_sim:
                 "Monthly Payment": actual_payment,
                 "LTV %": curr_ltv,
                 "At Risk of Liquidation": risk,
-                "Total Loan Balance (USD)": loan_balance if loan_balance > 0 else ""  # Ensure no NaN values
+                "Total Loan Balance (USD)": loan_balance if loan_balance > 0 else None  # Ensure no NaN values
             })
 
         df = pd.DataFrame(rows)
 
         st.subheader("Simulation Results")
+        # Replace any NaN or None in 'Total Loan Balance (USD)' with empty string
+        df["Total Loan Balance (USD)"] = df["Total Loan Balance (USD)"].fillna("")
         st.dataframe(df.style.format({
             "BTC Price (USD)": "${:,.2f}",
             "Collateral Value (USD)": "${:,.2f}",
@@ -95,7 +97,7 @@ if run_sim:
             "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%",
             "Total Loan Balance (USD)": "${:,.2f}"
-        }).hide_columns(["Total Loan Balance (USD)"]) if df["Total Loan Balance (USD)"].isna().all() else df, use_container_width=True)
+        }), use_container_width=True)
 
     else:
         loan_history = []
@@ -166,7 +168,7 @@ if run_sim:
                             "Monthly Payment": total_payment,
                             "LTV %": ltv_percent,
                             "At Risk of Liquidation": at_risk,
-                            "Total Loan Balance (USD)": total_loan_balance  # Only the last loan shows the total
+                            "Total Loan Balance (USD)": total_loan_balance if total_loan_balance > 0 else ""  # Last loan shows total balance
                         })
                     else:
                         loan_history.append({
@@ -187,6 +189,8 @@ if run_sim:
 
         dca_df = pd.DataFrame(filtered_loan_history)
         st.subheader("DCA Independent Loan Snapshots")
+        # Replace any NaN or None in 'Total Loan Balance (USD)' with empty string
+        dca_df["Total Loan Balance (USD)"] = dca_df["Total Loan Balance (USD)"].fillna("")
         st.dataframe(dca_df.style.format({
             "BTC Price (USD)": "${:,.2f}",
             "Collateral Value (USD)": "${:,.2f}",
