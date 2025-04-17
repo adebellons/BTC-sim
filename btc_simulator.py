@@ -85,14 +85,8 @@ if run_sim:
 
         df = pd.DataFrame(rows)
 
-        # Function to highlight last row of each month
-        def highlight_last_row_per_month(row):
-            if row['Month'] != 0 and row['Month'] != df['Month'].iloc[-1]:
-                return []
-            return ['background-color: yellow'] * len(row)
-
         st.subheader("Simulation Results")
-        st.dataframe(df.style.apply(highlight_last_row_per_month, axis=1).format({
+        st.dataframe(df.style.format({
             "BTC Price (USD)": "${:,.2f}",
             "Collateral Value (USD)": "${:,.2f}",
             "Loan Balance (USD)": "${:,.2f}",
@@ -180,14 +174,8 @@ if run_sim:
 
         dca_df = pd.DataFrame(filtered_loan_history)
 
-        # Function to highlight last row of each month
-        def highlight_last_row_per_month(row):
-            if row['Month'] != 0 and row['Month'] != dca_df['Month'].iloc[-1]:
-                return []
-            return ['background-color: yellow'] * len(row)
-
         st.subheader("DCA Independent Loan Snapshots")
-        st.dataframe(dca_df.style.apply(highlight_last_row_per_month, axis=1).format({
+        st.dataframe(dca_df.style.format({
             "BTC Price (USD)": "${:,.2f}",
             "Collateral Value (USD)": "${:,.2f}",
             "Loan Balance (USD)": "${:,.2f}",
