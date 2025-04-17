@@ -129,7 +129,20 @@ if run_sim:
 
             # Update and record all active loans
             for loan in active_loans:
-                if m > loan['start_month']:  # skip first month of each loan
+                if m == loan['start_month']:
+                    # Insert first row for new loan (no interest/payment yet)
+                    loan_history.append({
+                        "Month": m,
+                        "Loan #": loan['loan_id'],
+                        "BTC Price (USD)": price,
+                        "Collateral Value (USD)": loan['btc_collateral'] * price,
+                        "Loan Balance (USD)": loan['loan_balance'],
+                        "Interest Accrued (Total)": loan['interest_accrued'],
+                        "Monthly Payment": 0.0,
+                        "LTV %": loan['loan_balance'] / (loan['btc_collateral'] * price) * 100,
+                        "At Risk of Liquidation": "Yes" if (loan['loan_balance'] / (loan['btc_collateral'] * price) * 100 > liq_threshold) else "No"
+                    })
+                elif m > loan['start_month']:
                     num_active_loans = len([l for l in active_loans if m > l['start_month']])
                     monthly_share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
 
