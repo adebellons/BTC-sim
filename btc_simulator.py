@@ -130,10 +130,10 @@ if run_sim:
                         "Month": m,
                         "Loan #": loan['loan_id'],
                         "BTC Price (USD)": price,
-                        "BTC Collateral": loan['btc_collateral'],
-                        "Interest Accrued": loan['interest_accrued'],
-                        "Payment Made": loan['payment'],
-                        "Ending Balance": loan['loan_balance'],
+                        "Collateral Value (USD)": loan['btc_collateral'] * price,
+                        "Loan Balance (USD)": loan['loan_balance'],
+                        "Interest Accrued (Total)": loan['interest_accrued'],
+                        "Monthly Payment": loan['payment'],
                         "LTV %": ltv_percent,
                         "At Risk of Liquidation": at_risk
                     })
@@ -142,8 +142,9 @@ if run_sim:
         st.subheader("DCA Independent Loan Snapshots")
         st.dataframe(dca_df.style.format({
             "BTC Price (USD)": "${:,.2f}",
-            "Interest Accrued": "${:,.2f}",
-            "Payment Made": "${:,.2f}",
-            "Ending Balance": "${:,.2f}",
+            "Collateral Value (USD)": "${:,.2f}",
+            "Loan Balance (USD)": "${:,.2f}",
+            "Interest Accrued (Total)": "${:,.2f}",
+            "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%"
         }), use_container_width=True)
