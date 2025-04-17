@@ -143,17 +143,33 @@ if run_sim:
                     ltv_percent = loan['loan_balance'] / (loan['btc_collateral'] * price) * 100
                     at_risk = "Yes" if ltv_percent > liq_threshold else "No"
 
-                    loan_history.append({
-                        "Month": m,
-                        "Loan #": loan['loan_id'],
-                        "BTC Price (USD)": price,
-                        "Collateral Value (USD)": loan['btc_collateral'] * price,
-                        "Loan Balance (USD)": loan['loan_balance'],
-                        "Interest Accrued (Total)": loan['interest_accrued'],
-                        "Monthly Payment": loan['payment'] + monthly_share_payment,
-                        "LTV %": ltv_percent,
-                        "At Risk of Liquidation": at_risk
-                    })
+                    # Record the snapshot for Month 1
+                    if m == loan['start_month']:
+                        loan_history.append({
+                            "Month": m,
+                            "Loan #": loan['loan_id'],
+                            "BTC Price (USD)": price,
+                            "Collateral Value (USD)": loan['btc_collateral'] * price,  # Month 1 collateral
+                            "Loan Balance (USD)": loan['loan_balance'],
+                            "Interest Accrued (Total)": loan['interest_accrued'],
+                            "Monthly Payment": loan['payment'] + monthly_share_payment,
+                            "LTV %": ltv_percent,
+                            "At Risk of Liquidation": at_risk
+                        })
+
+                    # For subsequent months
+                    if m > loan['start_month']:
+                        loan_history.append({
+                            "Month": m,
+                            "Loan #": loan['loan_id'],
+                            "BTC Price (USD)": price,
+                            "Collateral Value (USD)": loan['btc_collateral'] * price,
+                            "Loan Balance (USD)": loan['loan_balance'],
+                            "Interest Accrued (Total)": loan['interest_accrued'],
+                            "Monthly Payment": loan['payment'] + monthly_share_payment,
+                            "LTV %": ltv_percent,
+                            "At Risk of Liquidation": at_risk
+                        })
 
         dca_df = pd.DataFrame(loan_history)
         st.subheader("DCA Independent Loan Snapshots")
