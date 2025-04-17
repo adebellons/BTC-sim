@@ -129,12 +129,14 @@ if run_sim:
 
             # Update and record all active loans
             for loan in active_loans:
-                if m > loan['start_month']:  # skip first month of each loan
-                    num_active_loans = len([l for l in active_loans if m > l['start_month']])
+                if m >= loan['start_month']:  # Handle first month for each loan
+                    num_active_loans = len([l for l in active_loans if m >= l['start_month']])
                     monthly_share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
 
                     interest = loan['loan_balance'] * monthly_interest_rate
-                    loan['interest_accrued'] += interest
+                    if m > loan['start_month']:  # Skip first month for interest
+                        loan['interest_accrued'] += interest
+
                     loan['loan_balance'] += interest - loan['payment'] - monthly_share_payment
                     loan['loan_balance'] = max(loan['loan_balance'], 0.0)
 
