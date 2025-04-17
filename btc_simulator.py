@@ -88,16 +88,24 @@ if run_sim:
 
         df = pd.DataFrame(rows)
 
+        # Revert the column order so "Total Loan Balance (USD)" is after "Interest Accrued (Total)"
+        df = df[[
+            "Month", "BTC Price (USD)", "Collateral Value (USD)", "Loan Balance (USD)", 
+            "Interest Accrued (Total)", "Monthly Interest", "Monthly Payment", "LTV %", 
+            "At Risk of Liquidation", "Total Loan Balance (USD)"
+        ]]
+
         st.subheader("Simulation Results")
         st.dataframe(df.style.format({
             "BTC Price (USD)": "${:,.2f}",
             "Collateral Value (USD)": "${:,.2f}",
             "Loan Balance (USD)": "${:,.2f}",
+            "Total Loan Balance (USD)": "${:,.2f}",
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Interest": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%",
-            "Total Loan Balance (USD)": "${:,.2f}"
+            "At Risk of Liquidation": "{:,.2f}"
         }), use_container_width=True)
 
         # Display the total loan balance as a table
@@ -207,5 +215,4 @@ if run_sim:
             "Total Loan Balance (USD)": total_loan_balances_dca
         })
         st.dataframe(total_loan_balance_df_dca.style.format({
-            "Total Loan Balance (USD)": "${:,.2f}"
-        }), use_container_width=True)
+            "Total
