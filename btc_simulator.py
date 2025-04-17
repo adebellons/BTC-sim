@@ -45,7 +45,7 @@ if run_sim:
         if initial_btc is not None:
             btc_amount = initial_btc
         else:
-            btc_amount = initial_usd / btc_price  # Convert USD collateral to BTC
+            btc_amount = initial_usd / btc_price
 
         loan_balance = btc_amount * btc_price * ltv / 100
         interest_accrued = 0.0
@@ -56,7 +56,6 @@ if run_sim:
             price_idx = prices[m]
             btc_value = btc_amount * price_idx
 
-            # Only calculate interest and payments after month 0
             if m > 0:
                 monthly_interest = loan_balance * (interest_rate / 100) / 12
                 interest_accrued += monthly_interest
@@ -68,7 +67,6 @@ if run_sim:
 
             loan_balance = max(loan_balance, 0.0)
 
-            # compute risk
             curr_ltv = (loan_balance / btc_value * 100) if btc_value > 0 else 0.0
             risk = "Yes" if (curr_ltv > liq_threshold and loan_balance > 0) else "No"
 
@@ -98,32 +96,28 @@ if run_sim:
         }), use_container_width=True)
 
     else:
-        # Simulate DCA with Independent Loans and track each over time
         loan_history = []
         active_loans = []
 
         for m in range(1, months + 1):
             price = prices[m]
+
             if m == 1:
-                # First loan, use initial USD collateral to purchase BTC
-                btc_purchased = initial_usd / price  # Convert the initial USD to BTC
-                collateral_value = initial_usd  # Collateral value is the initial USD amount
+                btc_purchased = initial_usd / price
+                collateral_value = initial_usd
             else:
-                # For subsequent loans, use DCA to purchase BTC
                 btc_purchased = dca_amount / price
-                collateral_value = btc_purchased * price  # Actual collateral value in USD
+                collateral_value = dca_amount
 
             loan_amount = collateral_value * ltv / 100
             monthly_interest_rate = (interest_rate / 100) / 12
 
-            # Apply payment to previous loan
             if active_loans:
-                payment_to_previous = loan_amount * 0.10  # 10% of new loan
+                payment_to_previous = loan_amount * 0.10
                 active_loans[-1]['payment'] += payment_to_previous
             else:
                 payment_to_previous = 0.0
 
-            # Add new loan to active list
             new_loan = {
                 "loan_id": len(active_loans) + 1,
                 "start_month": m,
@@ -134,49 +128,35 @@ if run_sim:
             }
             active_loans.append(new_loan)
 
-            # Update and record all active loans
             for loan in active_loans:
-                if m >= loan['start_month']:  # Handle first month for each loan
-                    num_active_loans = len([l for l in active_loans if m >= l['start_month']])
+                if m >= loan['start_month']:
+                    num_active_loans = len([l for l in active_loans if m > l['start_month']])
                     monthly_share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
 
-                    interest = loan['loan_balance'] * monthly_interest_rate
-                    if m > loan['start_month']:  # Skip first month for interest
+                    if m == loan['start_month']:
+                        interest = 0.0
+                        total_payment = 0.0
+                    else:
+                        interest = loan['loan_balance'] * monthly_interest_rate
                         loan['interest_accrued'] += interest
-
-                    loan['loan_balance'] += interest - loan['payment'] - monthly_share_payment
-                    loan['loan_balance'] = max(loan['loan_balance'], 0.0)
+                        loan['loan_balance'] += interest - loan['payment'] - monthly_share_payment
+                        loan['loan_balance'] = max(loan['loan_balance'], 0.0)
+                        total_payment = loan['payment'] + monthly_share_payment
 
                     ltv_percent = loan['loan_balance'] / (loan['btc_collateral'] * price) * 100
                     at_risk = "Yes" if ltv_percent > liq_threshold else "No"
 
-                    # Record the snapshot for Month 1
-                    if m == loan['start_month']:
-                        loan_history.append({
-                            "Month": m,
-                            "Loan #": loan['loan_id'],
-                            "BTC Price (USD)": price,
-                            "Collateral Value (USD)": collateral_value,  # Corrected for Month 1
-                            "Loan Balance (USD)": loan['loan_balance'],
-                            "Interest Accrued (Total)": loan['interest_accrued'],
-                            "Monthly Payment": loan['payment'] + monthly_share_payment,
-                            "LTV %": ltv_percent,
-                            "At Risk of Liquidation": at_risk
-                        })
-
-                    # For subsequent months
-                    if m > loan['start_month']:
-                        loan_history.append({
-                            "Month": m,
-                            "Loan #": loan['loan_id'],
-                            "BTC Price (USD)": price,
-                            "Collateral Value (USD)": loan['btc_collateral'] * price,
-                            "Loan Balance (USD)": loan['loan_balance'],
-                            "Interest Accrued (Total)": loan['interest_accrued'],
-                            "Monthly Payment": loan['payment'] + monthly_share_payment,
-                            "LTV %": ltv_percent,
-                            "At Risk of Liquidation": at_risk
-                        })
+                    loan_history.append({
+                        "Month": m,
+                        "Loan #": loan['loan_id'],
+                        "BTC Price (USD)": price,
+                        "Collateral Value (USD)": loan['btc_collateral'] * price,
+                        "Loan Balance (USD)": loan['loan_balance'],
+                        "Interest Accrued (Total)": loan['interest_accrued'],
+                        "Monthly Payment": total_payment,
+                        "LTV %": ltv_percent,
+                        "At Risk of Liquidation": at_risk
+                    })
 
         dca_df = pd.DataFrame(loan_history)
         st.subheader("DCA Independent Loan Snapshots")
