@@ -130,8 +130,8 @@ if run_sim:
             }
             active_loans.append(new_loan)
 
+            # Calculate total loan balance for this month
             total_loan_balance = 0.0
-
             for loan in active_loans:
                 if m >= loan['start_month']:
                     num_active_loans = len([l for l in active_loans if m >= l['start_month']])
@@ -148,6 +148,7 @@ if run_sim:
                         loan['loan_balance'] = max(loan['loan_balance'], 0.0)
                         total_payment = loan['payment'] + monthly_share_payment
 
+                    # Summing the loan balances to calculate total loan balance
                     total_loan_balance += loan['loan_balance']
 
                     ltv_percent = loan['loan_balance'] / (loan['btc_collateral'] * price) * 100
@@ -161,11 +162,11 @@ if run_sim:
                             "BTC Price (USD)": price,
                             "Collateral Value (USD)": loan['btc_collateral'] * price,
                             "Loan Balance (USD)": loan['loan_balance'],
-                            "Total Loan Balance (USD)": total_loan_balance,  # Show total loan balance for this month
                             "Interest Accrued (Total)": loan['interest_accrued'],
                             "Monthly Payment": total_payment,
                             "LTV %": ltv_percent,
-                            "At Risk of Liquidation": at_risk
+                            "At Risk of Liquidation": at_risk,
+                            "Total Loan Balance (USD)": total_loan_balance  # Show total loan balance for this month
                         })
 
         # Remove rows where loan balance is 0 for all loans
