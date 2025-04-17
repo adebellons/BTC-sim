@@ -79,7 +79,8 @@ if run_sim:
                 "Monthly Interest": monthly_interest,
                 "Monthly Payment": actual_payment,
                 "LTV %": curr_ltv,
-                "At Risk of Liquidation": risk
+                "At Risk of Liquidation": risk,
+                "Total Loan Balance (USD)": loan_balance  # Initially it's just the loan balance
             })
 
         df = pd.DataFrame(rows)
@@ -92,7 +93,8 @@ if run_sim:
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Interest": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
-            "LTV %": "{:.2f}%"
+            "LTV %": "{:.2f}%",
+            "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
 
     else:
@@ -159,7 +161,7 @@ if run_sim:
                             "BTC Price (USD)": price,
                             "Collateral Value (USD)": loan['btc_collateral'] * price,
                             "Loan Balance (USD)": loan['loan_balance'],
-                            "Total Loan Balance (USD)": total_loan_balance,  # Moved this column here
+                            "Total Loan Balance (USD)": total_loan_balance,  # Show total loan balance for this month
                             "Interest Accrued (Total)": loan['interest_accrued'],
                             "Monthly Payment": total_payment,
                             "LTV %": ltv_percent,
