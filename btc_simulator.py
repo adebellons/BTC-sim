@@ -3,6 +3,15 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 
+# Add Sidebar Inputs
+st.sidebar.title("DCA Loan Simulator Settings")
+
+# Add input fields to the sidebar
+dca_amount_usd = st.sidebar.number_input("DCA Amount (USD)", min_value=0, value=500, step=50)
+ltv = st.sidebar.slider("Loan-to-Value (LTV) %", 0.0, 1.0, 0.5, 0.01)
+interest_rate = st.sidebar.slider("Interest Rate (%)", 0.0, 100.0, 8.0, 0.1) / 100  # Convert to decimal
+monthly_payment_pct = st.sidebar.slider("Monthly Payment %", 0.0, 1.0, 0.01, 0.01)
+
 # Simulate the DCA loan chart
 def simulate_dca_loan_chart(
     btc_prices,
@@ -26,11 +35,6 @@ def simulate_dca_loan_chart(
 
 # Assume this returns your DCA loan chart
 btc_prices = np.random.rand(12) * 40000  # Replace with actual BTC prices or method to fetch them
-
-dca_amount_usd = 500  # Example DCA amount
-ltv = 0.5
-interest_rate = 0.08
-monthly_payment_pct = 0.01
 
 dca_df = simulate_dca_loan_chart(
     btc_prices=btc_prices,
