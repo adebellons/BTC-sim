@@ -44,10 +44,12 @@ if run_sim:
     if not dca_mode:
         if initial_btc is not None:
             btc_amount = initial_btc
+            collateral_value = btc_amount * btc_price
         else:
             btc_amount = initial_usd / btc_price
+            collateral_value = initial_usd
 
-        loan_balance = btc_amount * btc_price * ltv / 100
+        loan_balance = collateral_value * ltv / 100
         interest_accrued = 0.0
 
         rows = []
@@ -103,11 +105,11 @@ if run_sim:
             price = prices[m]
 
             if m == 1:
-                btc_purchased = initial_usd / price
                 collateral_value = initial_usd
+                btc_purchased = collateral_value / price
             else:
-                btc_purchased = dca_amount / price
                 collateral_value = dca_amount
+                btc_purchased = collateral_value / price
 
             loan_amount = collateral_value * ltv / 100
             monthly_interest_rate = (interest_rate / 100) / 12
