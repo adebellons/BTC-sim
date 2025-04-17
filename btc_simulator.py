@@ -86,9 +86,13 @@ if run_sim:
         df = pd.DataFrame(rows)
 
         # Highlight last entry of each month in "Total Loan Balance (USD)" column
-        def highlight_last_entry(s):
-            return ['background-color: yellow' if s.index[-1] == i else '' for i in s.index]
+        def highlight_last_entry(group):
+            # Find the last entry in each group (month)
+            last_idx = group.index[-1]
+            styles = ['background-color: yellow' if i == last_idx else '' for i in group.index]
+            return styles
 
+        # Group by month and apply styling to highlight last entry of each month
         st.subheader("Simulation Results")
         st.dataframe(df.style.format({
             "BTC Price (USD)": "${:,.2f}",
@@ -99,7 +103,7 @@ if run_sim:
             "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%",
             "Total Loan Balance (USD)": "${:,.2f}"
-        }).apply(highlight_last_entry, subset=["Total Loan Balance (USD)"]), use_container_width=True)
+        }).apply(lambda df: df.groupby('Month').apply(highlight_last_entry), subset=["Total Loan Balance (USD)"]), use_container_width=True)
 
     else:
         loan_history = []
@@ -179,8 +183,11 @@ if run_sim:
         dca_df = pd.DataFrame(filtered_loan_history)
 
         # Highlight last entry of each month in "Total Loan Balance (USD)" column
-        def highlight_last_entry(s):
-            return ['background-color: yellow' if s.index[-1] == i else '' for i in s.index]
+        def highlight_last_entry(group):
+            # Find the last entry in each group (month)
+            last_idx = group.index[-1]
+            styles = ['background-color: yellow' if i == last_idx else '' for i in group.index]
+            return styles
 
         st.subheader("DCA Independent Loan Snapshots")
         st.dataframe(dca_df.style.format({
@@ -191,4 +198,4 @@ if run_sim:
             "Monthly Payment": "${:,.2f}",
             "LTV %": "{:.2f}%",
             "Total Loan Balance (USD)": "${:,.2f}"
-        }).apply(highlight_last_entry, subset=["Total Loan Balance (USD)"]), use_container_width=True)
+        }).apply(lambda df: df.groupby('Month').apply(highlight_last_entry), subset=["Total Loan Balance (USD)"]), use_container_width=True)
