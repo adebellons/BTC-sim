@@ -136,6 +136,7 @@ if run_sim:
                     monthly_share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
 
                     if m == loan['start_month']:
+                        # No payment or interest for the first month of each loan
                         interest = 0.0
                         total_payment = 0.0
                     else:
