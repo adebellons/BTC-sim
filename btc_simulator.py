@@ -118,9 +118,12 @@ if run_sim:
             # Update and record all active loans
             for loan in active_loans:
                 if m >= loan['start_month']:
+                    num_active_loans = len([l for l in active_loans if m >= l['start_month']])
+                    monthly_share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
+
                     interest = loan['loan_balance'] * monthly_interest_rate
                     loan['interest_accrued'] += interest
-                    loan['loan_balance'] += interest - loan['payment']
+                    loan['loan_balance'] += interest - loan['payment'] - monthly_share_payment
                     loan['loan_balance'] = max(loan['loan_balance'], 0.0)
 
                     ltv_percent = loan['loan_balance'] / (loan['btc_collateral'] * price) * 100
@@ -133,7 +136,7 @@ if run_sim:
                         "Collateral Value (USD)": loan['btc_collateral'] * price,
                         "Loan Balance (USD)": loan['loan_balance'],
                         "Interest Accrued (Total)": loan['interest_accrued'],
-                        "Monthly Payment": loan['payment'],
+                        "Monthly Payment": loan['payment'] + monthly_share_payment,
                         "LTV %": ltv_percent,
                         "At Risk of Liquidation": at_risk
                     })
