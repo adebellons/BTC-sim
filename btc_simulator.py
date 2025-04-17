@@ -154,8 +154,8 @@ if run_sim:
                     ltv_percent = loan['loan_balance'] / (loan['btc_collateral'] * price) * 100
                     at_risk = "Yes" if ltv_percent > liq_threshold else "No"
 
-                    # Only add to history if the loan balance is greater than 0
-                    if loan['loan_balance'] > 0:
+                    # Add the total loan balance for all loans for the last loan of each month
+                    if loan == active_loans[-1]:
                         loan_history.append({
                             "Month": m,
                             "Loan #": loan['loan_id'],
@@ -166,7 +166,20 @@ if run_sim:
                             "Monthly Payment": total_payment,
                             "LTV %": ltv_percent,
                             "At Risk of Liquidation": at_risk,
-                            "Total Loan Balance (USD)": total_loan_balance  # Show total loan balance for this month
+                            "Total Loan Balance (USD)": total_loan_balance  # Only the last loan shows the total
+                        })
+                    else:
+                        loan_history.append({
+                            "Month": m,
+                            "Loan #": loan['loan_id'],
+                            "BTC Price (USD)": price,
+                            "Collateral Value (USD)": loan['btc_collateral'] * price,
+                            "Loan Balance (USD)": loan['loan_balance'],
+                            "Interest Accrued (Total)": loan['interest_accrued'],
+                            "Monthly Payment": total_payment,
+                            "LTV %": ltv_percent,
+                            "At Risk of Liquidation": at_risk,
+                            "Total Loan Balance (USD)": ""  # Empty for non-last loans
                         })
 
         # Remove rows where loan balance is 0 for all loans
