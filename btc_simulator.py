@@ -100,9 +100,15 @@ if run_sim:
             "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
 
-        # Display the total loan balance chart
-        st.subheader("Total Loan Balance Over Time")
-        st.line_chart(total_loan_balances)  # Plotting the total loan balance
+        # Display the total loan balance as a table
+        st.subheader("Total Loan Balance for Each Month")
+        total_loan_balance_df = pd.DataFrame({
+            "Month": range(months + 1),
+            "Total Loan Balance (USD)": total_loan_balances
+        })
+        st.dataframe(total_loan_balance_df.style.format({
+            "Total Loan Balance (USD)": "${:,.2f}"
+        }), use_container_width=True)
 
     else:
         loan_history = []
@@ -194,6 +200,12 @@ if run_sim:
             "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
 
-        # Display the total loan balance chart (DCA mode)
-        st.subheader("Total Loan Balance Over Time (DCA Mode)")
-        st.line_chart(total_loan_balances_dca)  # Plotting the total loan balance for DCA mode
+        # Display the total loan balance as a table (DCA mode)
+        st.subheader("Total Loan Balance for Each Month (DCA Mode)")
+        total_loan_balance_df_dca = pd.DataFrame({
+            "Month": range(1, months + 1),
+            "Total Loan Balance (USD)": total_loan_balances_dca
+        })
+        st.dataframe(total_loan_balance_df_dca.style.format({
+            "Total Loan Balance (USD)": "${:,.2f}"
+        }), use_container_width=True)
