@@ -127,8 +127,8 @@ if run_sim:
             loan_amount = collateral_value * ltv / 100
             monthly_interest_rate = (interest_rate / 100) / 12
 
-            # New logic: payment to previous loan = loan amount - payment
-            payment_to_previous = max(loan_amount - payment, 0.0)
+            # Determine how much to repay the previous loan
+            payment_to_previous = loan_amount - payment if payment < loan_amount else 0.0
             if active_loans:
                 active_loans[-1]['payment'] += payment_to_previous
 
@@ -171,7 +171,7 @@ if run_sim:
                             "Collateral Value (USD)": loan['btc_collateral'] * price,
                             "Loan Balance (USD)": loan['loan_balance'],
                             "Interest Accrued (Total)": loan['interest_accrued'],
-                            "Monthly Payment": total_payment,
+                            "Monthly Payment": payment if m > loan['start_month'] else 0.0,
                             "LTV %": ltv_percent,
                             "At Risk of Liquidation": at_risk,
                             "Total Loan Balance (USD)": total_loan_balance
