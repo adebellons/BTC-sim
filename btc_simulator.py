@@ -14,7 +14,7 @@ if collateral_type == "BTC":
     initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0)
     initial_usd = None
 else:
-    initial_usd = st.sidebar.number_input("Initial USD Collateral Amount", value=30000.0)
+    initial_usd = st.sidebar.number_input("Initial USD Collateral Amount", value=20000.0)
     initial_btc = None
 
 ltv = st.sidebar.slider("Initial Loan-to-Value (LTV) %", min_value=0, max_value=100, value=50)
@@ -22,18 +22,18 @@ liq_threshold = st.sidebar.slider("Liquidation Threshold LTV %", 1, 100, 85)
 interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0)
 payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0)
 
-simulation_months = st.sidebar.slider("Simulation Duration (Months)", 12, 120, 36)
+simulation_months = st.sidebar.slider("Simulation Duration (Months)", 12, 120, 12)
 
-use_live_data = st.sidebar.checkbox("Use live BTC price", value=False)
+use_live_data = st.sidebar.checkbox("Use live BTC price", value=True)
 
 dca_mode = st.sidebar.checkbox("DCA with Independent Loans", value=False)
 if dca_mode:
-    dca_amount = st.sidebar.number_input("Monthly DCA Amount (USD)", value=500.0)
+    dca_amount = st.sidebar.number_input("Monthly DCA Amount (USD)", value=2000.0)
 
 if use_live_data:
     btc_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
 else:
-    btc_price = st.sidebar.number_input("BTC Price (USD)", value=30000.0)
+    btc_price = st.sidebar.number_input("BTC Price (USD)", value=20000.0)
 
 run_sim = st.button("Run Simulation")
 
