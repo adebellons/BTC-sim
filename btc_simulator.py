@@ -20,7 +20,7 @@ else:
 ltv = st.sidebar.slider("Initial Loan-to-Value (LTV) %", min_value=0, max_value=100, value=50)
 liq_threshold = st.sidebar.slider("Liquidation Threshold LTV %", 1, 100, 85)
 interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0)
-payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0)
+payment = st.sidebar.number_input("Monthly Payment (USD)", value=1000.0)
 
 simulation_months = st.sidebar.slider("Simulation Duration (Months)", 12, 120, 12)
 
@@ -29,7 +29,6 @@ use_live_data = st.sidebar.checkbox("Use live BTC price", value=True)
 dca_mode = st.sidebar.checkbox("DCA with Independent Loans", value=False)
 if dca_mode:
     dca_amount = st.sidebar.number_input("Monthly DCA Amount (USD)", value=2000.0)
-    income_withdrawal = st.sidebar.slider("Monthly Income Withdrawal (USD)", min_value=0, max_value=10000, value=1000, step=100)
 
 if use_live_data:
     btc_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
@@ -126,18 +125,19 @@ if run_sim:
                 collateral_value = dca_amount
 
             loan_amount = collateral_value * ltv / 100
-            income = min(income_withdrawal, loan_amount)
-            remaining_loan = loan_amount - income
-            payment_to_previous = remaining_loan * 0.10
+            monthly_interest_rate = (interest_rate / 100) / 12
 
             if active_loans:
+                payment_to_previous = loan_amount * 0.10
                 active_loans[-1]['payment'] += payment_to_previous
+            else:
+                payment_to_previous = 0.0
 
             new_loan = {
                 "loan_id": len(active_loans) + 1,
                 "start_month": m,
                 "btc_collateral": btc_purchased,
-                "loan_balance": remaining_loan,
+                "loan_balance": loan_amount,
                 "payment": 0.0,
                 "interest_accrued": 0.0
             }
@@ -153,7 +153,7 @@ if run_sim:
                         interest = 0.0
                         total_payment = 0.0
                     else:
-                        interest = loan['loan_balance'] * (interest_rate / 100) / 12
+                        interest = loan['loan_balance'] * monthly_interest_rate
                         loan['interest_accrued'] += interest
                         loan['loan_balance'] += interest - loan['payment'] - monthly_share_payment
                         loan['loan_balance'] = max(loan['loan_balance'], 0.0)
