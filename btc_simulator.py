@@ -127,61 +127,52 @@ if run_sim:
             loan_amount = collateral_value * ltv / 100
             monthly_interest_rate = (interest_rate / 100) / 12
 
-            # Determine how much to repay the previous loan
-            payment_to_previous = loan_amount - payment if payment < loan_amount else 0.0
-            if active_loans:
-                active_loans[-1]['payment'] += payment_to_previous
-
             new_loan = {
                 "loan_id": len(active_loans) + 1,
                 "start_month": m,
                 "btc_collateral": btc_purchased,
                 "loan_balance": loan_amount,
-                "payment": 0.0,
                 "interest_accrued": 0.0
             }
             active_loans.append(new_loan)
 
             total_loan_balance = 0.0
+
             for loan in active_loans:
                 if m >= loan['start_month']:
-                    num_active_loans = len([l for l in active_loans if m >= l['start_month']])
-                    monthly_share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
-
                     if m == loan['start_month']:
                         interest = 0.0
-                        total_payment = 0.0
+                        actual_payment = 0.0
                     else:
                         interest = loan['loan_balance'] * monthly_interest_rate
                         loan['interest_accrued'] += interest
-                        loan['loan_balance'] += interest - loan['payment'] - monthly_share_payment
+                        num_active_loans = len([l for l in active_loans if m >= l['start_month']])
+                        share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
+                        loan['loan_balance'] += interest - share_payment
                         loan['loan_balance'] = max(loan['loan_balance'], 0.0)
-                        total_payment = loan['payment'] + monthly_share_payment
+                        actual_payment = share_payment
 
                     total_loan_balance += loan['loan_balance']
 
                     ltv_percent = loan['loan_balance'] / (loan['btc_collateral'] * price) * 100
                     at_risk = "Yes" if ltv_percent > liq_threshold else "No"
 
-                    if loan['loan_balance'] > 0:
-                        loan_history.append({
-                            "Month": m,
-                            "Loan #": loan['loan_id'],
-                            "BTC Price (USD)": price,
-                            "Collateral Value (USD)": loan['btc_collateral'] * price,
-                            "Loan Balance (USD)": loan['loan_balance'],
-                            "Interest Accrued (Total)": loan['interest_accrued'],
-                            "Monthly Payment": payment if m > loan['start_month'] else 0.0,
-                            "LTV %": ltv_percent,
-                            "At Risk of Liquidation": at_risk,
-                            "Total Loan Balance (USD)": total_loan_balance
-                        })
+                    loan_history.append({
+                        "Month": m,
+                        "Loan #": loan['loan_id'],
+                        "BTC Price (USD)": price,
+                        "Collateral Value (USD)": loan['btc_collateral'] * price,
+                        "Loan Balance (USD)": loan['loan_balance'],
+                        "Interest Accrued (Total)": loan['interest_accrued'],
+                        "Monthly Payment": actual_payment,
+                        "LTV %": ltv_percent,
+                        "At Risk of Liquidation": at_risk,
+                        "Total Loan Balance (USD)": total_loan_balance
+                    })
 
             total_loan_balances_dca.append(total_loan_balance)
 
-        filtered_loan_history = [entry for entry in loan_history if entry['Loan Balance (USD)'] > 0]
-
-        dca_df = pd.DataFrame(filtered_loan_history)
+        dca_df = pd.DataFrame(loan_history)
         st.subheader("DCA Independent Loan Snapshots")
         st.dataframe(dca_df.style.format({
             "BTC Price (USD)": "${:,.2f}",
