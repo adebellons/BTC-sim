@@ -20,7 +20,7 @@ else:
 ltv = st.sidebar.slider("Initial Loan-to-Value (LTV) %", min_value=0, max_value=100, value=50)
 liq_threshold = st.sidebar.slider("Liquidation Threshold LTV %", 1, 100, 85)
 interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0)
-payment = st.sidebar.number_input("Monthly Payment (USD)", value=2000.0)
+payment = st.sidebar.number_input("Monthly Payment (USD)", value=1000.0)
 
 simulation_months = st.sidebar.slider("Simulation Duration (Months)", 12, 120, 12)
 
