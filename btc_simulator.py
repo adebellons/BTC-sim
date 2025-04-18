@@ -128,13 +128,7 @@ if run_sim:
             loan_amount = collateral_value * ltv / 100
             monthly_interest_rate = (interest_rate / 100) / 12
 
-            if active_loans:
-                payment_to_previous = loan_amount * 0.10
-                active_loans[-1]['payment'] += payment_to_previous
-            else:
-                payment_to_previous = 0.0
-
-            remaining_for_payments = loan_amount - income_withdrawal - payment_to_previous
+            remaining_for_payments = loan_amount - income_withdrawal
             remaining_for_payments = max(remaining_for_payments, 0.0)
 
             new_loan = {
