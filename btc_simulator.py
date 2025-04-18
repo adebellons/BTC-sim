@@ -14,27 +14,26 @@ if collateral_type == "BTC":
     initial_btc = st.sidebar.number_input("Initial BTC Amount", value=1.0)
     initial_usd = None
 else:
-    initial_usd = st.sidebar.number_input("Initial USD Collateral Amount", value=2000.0)
+    initial_usd = st.sidebar.number_input("Initial USD Collateral Amount", value=30000.0)
     initial_btc = None
 
 ltv = st.sidebar.slider("Initial Loan-to-Value (LTV) %", min_value=0, max_value=100, value=50)
 liq_threshold = st.sidebar.slider("Liquidation Threshold LTV %", 1, 100, 85)
 interest_rate = st.sidebar.number_input("Annual Interest Rate (%)", value=6.0)
-payment = st.sidebar.number_input("Monthly Payment (USD)", value=1000.0)
+payment = st.sidebar.number_input("Monthly Payment (USD)", value=0.0)
 
-simulation_months = st.sidebar.slider("Simulation Duration (Months)", 12, 120, 12)
+simulation_months = st.sidebar.slider("Simulation Duration (Months)", 12, 120, 36)
 
-use_live_data = st.sidebar.checkbox("Use live BTC price", value=True)
+use_live_data = st.sidebar.checkbox("Use live BTC price", value=False)
 
 dca_mode = st.sidebar.checkbox("DCA with Independent Loans", value=False)
 if dca_mode:
-    dca_amount = st.sidebar.number_input("Monthly DCA Amount (USD)", value=2000.0)
-    income_withdrawal = st.sidebar.slider("Monthly Income Withdrawal (USD)", 0, int(dca_amount), 1000)
+    dca_amount = st.sidebar.number_input("Monthly DCA Amount (USD)", value=500.0)
 
 if use_live_data:
     btc_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
 else:
-    btc_price = st.sidebar.number_input("BTC Price (USD)", value=20000.0)
+    btc_price = st.sidebar.number_input("BTC Price (USD)", value=30000.0)
 
 run_sim = st.button("Run Simulation")
 
@@ -52,7 +51,7 @@ if run_sim:
         interest_accrued = 0.0
 
         rows = []
-        total_loan_balances = []
+        total_loan_balances = []  # To track the total loan balance for each month
 
         for m in range(months + 1):
             price_idx = prices[m]
@@ -82,10 +81,10 @@ if run_sim:
                 "Monthly Payment": actual_payment,
                 "LTV %": curr_ltv,
                 "At Risk of Liquidation": risk,
-                "Total Active Loan Balance (USD)": loan_balance  # Renamed column
+                "Total Loan Balance (USD)": loan_balance  # Initially it's just the loan balance
             })
 
-            total_loan_balances.append(loan_balance)
+            total_loan_balances.append(loan_balance)  # Add the total loan balance for this month
 
         df = pd.DataFrame(rows)
 
@@ -97,35 +96,43 @@ if run_sim:
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Interest": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
-            "LTV %": "{:.2f}%", 
-            "Total Active Loan Balance (USD)": "${:,.2f}"  # Renamed column
+            "LTV %": "{:.2f}%",
+            "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
 
-        st.subheader("Total Active Loan Balance for Each Month")
+        # Display the total loan balance as a table
+        st.subheader("Total Loan Balance for Each Month")
         total_loan_balance_df = pd.DataFrame({
             "Month": range(months + 1),
-            "Total Active Loan Balance (USD)": total_loan_balances  # Renamed column
+            "Total Loan Balance (USD)": total_loan_balances
         })
         st.dataframe(total_loan_balance_df.style.format({
-            "Total Active Loan Balance (USD)": "${:,.2f}"  # Renamed column
+            "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
 
     else:
         loan_history = []
         active_loans = []
-        total_loan_balances_dca = []
+        total_loan_balances_dca = []  # To track the total loan balance for each month (DCA mode)
 
         for m in range(1, months + 1):
             price = prices[m]
 
-            btc_purchased = dca_amount / price
-            collateral_value = dca_amount
+            if m == 1:
+                btc_purchased = initial_usd / price
+                collateral_value = initial_usd
+            else:
+                btc_purchased = dca_amount / price
+                collateral_value = dca_amount
 
             loan_amount = collateral_value * ltv / 100
-            monthly_interest_rate = (1 + interest_rate / 100) ** (1 / 12) - 1
+            monthly_interest_rate = (interest_rate / 100) / 12
 
-            remaining_for_payments = loan_amount - income_withdrawal
-            remaining_for_payments = max(remaining_for_payments, 0.0)
+            if active_loans:
+                payment_to_previous = loan_amount * 0.10
+                active_loans[-1]['payment'] += payment_to_previous
+            else:
+                payment_to_previous = 0.0
 
             new_loan = {
                 "loan_id": len(active_loans) + 1,
@@ -137,13 +144,15 @@ if run_sim:
             }
             active_loans.append(new_loan)
 
+            # Calculate total loan balance for this month
             total_loan_balance = 0.0
             for loan in active_loans:
                 if m >= loan['start_month']:
                     num_active_loans = len([l for l in active_loans if m >= l['start_month']])
-                    monthly_share_payment = remaining_for_payments / num_active_loans if num_active_loans > 0 else 0.0
+                    monthly_share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
 
                     if m == loan['start_month']:
+                        # No payment or interest for the first month of each loan
                         interest = 0.0
                         total_payment = 0.0
                     else:
@@ -153,11 +162,13 @@ if run_sim:
                         loan['loan_balance'] = max(loan['loan_balance'], 0.0)
                         total_payment = loan['payment'] + monthly_share_payment
 
+                    # Summing the loan balances to calculate total loan balance
                     total_loan_balance += loan['loan_balance']
 
                     ltv_percent = loan['loan_balance'] / (loan['btc_collateral'] * price) * 100
                     at_risk = "Yes" if ltv_percent > liq_threshold else "No"
 
+                    # Only add to history if the loan balance is greater than 0
                     if loan['loan_balance'] > 0:
                         loan_history.append({
                             "Month": m,
@@ -169,11 +180,12 @@ if run_sim:
                             "Monthly Payment": total_payment,
                             "LTV %": ltv_percent,
                             "At Risk of Liquidation": at_risk,
-                            "Total Active Loan Balance (USD)": total_loan_balance  # Renamed column
+                            "Total Loan Balance (USD)": total_loan_balance  # Show total loan balance for this month
                         })
 
-            total_loan_balances_dca.append(total_loan_balance)
+            total_loan_balances_dca.append(total_loan_balance)  # Add the total loan balance for DCA mode
 
+        # Remove rows where loan balance is 0 for all loans
         filtered_loan_history = [entry for entry in loan_history if entry['Loan Balance (USD)'] > 0]
 
         dca_df = pd.DataFrame(filtered_loan_history)
@@ -184,15 +196,16 @@ if run_sim:
             "Loan Balance (USD)": "${:,.2f}",
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
-            "LTV %": "{:.2f}%", 
-            "Total Active Loan Balance (USD)": "${:,.2f}"  # Renamed column
+            "LTV %": "{:.2f}%",
+            "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
 
-        st.subheader("Total Active Loan Balance for Each Month (DCA Mode)")
+        # Display the total loan balance as a table (DCA mode)
+        st.subheader("Total Loan Balance for Each Month (DCA Mode)")
         total_loan_balance_df_dca = pd.DataFrame({
             "Month": range(1, months + 1),
-            "Total Active Loan Balance (USD)": total_loan_balances_dca  # Renamed column
+            "Total Loan Balance (USD)": total_loan_balances_dca
         })
         st.dataframe(total_loan_balance_df_dca.style.format({
-            "Total Active Loan Balance (USD)": "${:,.2f}"  # Renamed column
+            "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
