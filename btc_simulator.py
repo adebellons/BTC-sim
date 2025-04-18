@@ -31,7 +31,7 @@ if dca_mode:
     dca_amount = st.sidebar.number_input("Monthly DCA Amount (USD)", value=2000.0)
 
 if use_live_data:
-    btc_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
+    btc_price = yf.Ticker("BTC-USD").history(period="1d")["Close"].iloc[-1]
 else:
     btc_price = st.sidebar.number_input("BTC Price (USD)", value=30000.0)
 
