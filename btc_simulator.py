@@ -29,6 +29,7 @@ use_live_data = st.sidebar.checkbox("Use live BTC price", value=True)
 dca_mode = st.sidebar.checkbox("DCA with Independent Loans", value=False)
 if dca_mode:
     dca_amount = st.sidebar.number_input("Monthly DCA Amount (USD)", value=2000.0)
+    income_withdrawal = st.sidebar.slider("Monthly Income Withdrawal (USD)", 0, int(dca_amount), 1000)
 
 if use_live_data:
     btc_price = yf.Ticker("BTC-USD").history(period="1d")['Close'].iloc[-1]
@@ -133,6 +134,9 @@ if run_sim:
             else:
                 payment_to_previous = 0.0
 
+            remaining_for_payments = loan_amount - income_withdrawal - payment_to_previous
+            remaining_for_payments = max(remaining_for_payments, 0.0)
+
             new_loan = {
                 "loan_id": len(active_loans) + 1,
                 "start_month": m,
@@ -147,7 +151,7 @@ if run_sim:
             for loan in active_loans:
                 if m >= loan['start_month']:
                     num_active_loans = len([l for l in active_loans if m >= l['start_month']])
-                    monthly_share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
+                    monthly_share_payment = remaining_for_payments / num_active_loans if num_active_loans > 0 else 0.0
 
                     if m == loan['start_month']:
                         interest = 0.0
