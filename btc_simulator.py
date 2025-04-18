@@ -82,7 +82,7 @@ if run_sim:
                 "Monthly Payment": actual_payment,
                 "LTV %": curr_ltv,
                 "At Risk of Liquidation": risk,
-                "Total Loan Balance (USD)": loan_balance
+                "Total Active Loan Balance (USD)": loan_balance  # Renamed column
             })
 
             total_loan_balances.append(loan_balance)
@@ -97,24 +97,23 @@ if run_sim:
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Interest": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
-            "LTV %": "{:.2f}%",
-            "Total Loan Balance (USD)": "${:,.2f}"
+            "LTV %": "{:.2f}%", 
+            "Total Active Loan Balance (USD)": "${:,.2f}"  # Renamed column
         }), use_container_width=True)
 
-        st.subheader("Total Loan Balance for Each Month")
+        st.subheader("Total Active Loan Balance for Each Month")
         total_loan_balance_df = pd.DataFrame({
             "Month": range(months + 1),
-            "Total Loan Balance (USD)": total_loan_balances
+            "Total Active Loan Balance (USD)": total_loan_balances  # Renamed column
         })
         st.dataframe(total_loan_balance_df.style.format({
-            "Total Loan Balance (USD)": "${:,.2f}"
+            "Total Active Loan Balance (USD)": "${:,.2f}"  # Renamed column
         }), use_container_width=True)
 
     else:
         loan_history = []
         active_loans = []
         total_loan_balances_dca = []
-        monthly_payment_used = []
 
         for m in range(1, months + 1):
             price = prices[m]
@@ -127,7 +126,6 @@ if run_sim:
 
             remaining_for_payments = loan_amount - income_withdrawal
             remaining_for_payments = max(remaining_for_payments, 0.0)
-            total_payment_made = 0.0
 
             new_loan = {
                 "loan_id": len(active_loans) + 1,
@@ -154,7 +152,6 @@ if run_sim:
                         loan['loan_balance'] += interest - loan['payment'] - monthly_share_payment
                         loan['loan_balance'] = max(loan['loan_balance'], 0.0)
                         total_payment = loan['payment'] + monthly_share_payment
-                        total_payment_made += monthly_share_payment
 
                     total_loan_balance += loan['loan_balance']
 
@@ -172,11 +169,10 @@ if run_sim:
                             "Monthly Payment": total_payment,
                             "LTV %": ltv_percent,
                             "At Risk of Liquidation": at_risk,
-                            "Total Loan Balance (USD)": total_loan_balance
+                            "Total Active Loan Balance (USD)": total_loan_balance  # Renamed column
                         })
 
             total_loan_balances_dca.append(total_loan_balance)
-            monthly_payment_used.append(total_payment_made)
 
         filtered_loan_history = [entry for entry in loan_history if entry['Loan Balance (USD)'] > 0]
 
@@ -188,17 +184,15 @@ if run_sim:
             "Loan Balance (USD)": "${:,.2f}",
             "Interest Accrued (Total)": "${:,.2f}",
             "Monthly Payment": "${:,.2f}",
-            "LTV %": "{:.2f}%",
-            "Total Loan Balance (USD)": "${:,.2f}"
+            "LTV %": "{:.2f}%", 
+            "Total Active Loan Balance (USD)": "${:,.2f}"  # Renamed column
         }), use_container_width=True)
 
-        st.subheader("Total Loan Balance for Each Month (DCA Mode)")
+        st.subheader("Total Active Loan Balance for Each Month (DCA Mode)")
         total_loan_balance_df_dca = pd.DataFrame({
             "Month": range(1, months + 1),
-            "Total Loan Balance (USD)": total_loan_balances_dca,
-            "Payment Used (USD)": monthly_payment_used
+            "Total Active Loan Balance (USD)": total_loan_balances_dca  # Renamed column
         })
         st.dataframe(total_loan_balance_df_dca.style.format({
-            "Total Loan Balance (USD)": "${:,.2f}",
-            "Payment Used (USD)": "${:,.2f}"
+            "Total Active Loan Balance (USD)": "${:,.2f}"  # Renamed column
         }), use_container_width=True)
