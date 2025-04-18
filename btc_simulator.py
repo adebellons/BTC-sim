@@ -51,7 +51,7 @@ if run_sim:
         interest_accrued = 0.0
 
         rows = []
-        total_loan_balances = []  # To track the total loan balance for each month
+        total_loan_balances = []
 
         for m in range(months + 1):
             price_idx = prices[m]
@@ -81,10 +81,10 @@ if run_sim:
                 "Monthly Payment": actual_payment,
                 "LTV %": curr_ltv,
                 "At Risk of Liquidation": risk,
-                "Total Loan Balance (USD)": loan_balance  # Initially it's just the loan balance
+                "Total Loan Balance (USD)": loan_balance
             })
 
-            total_loan_balances.append(loan_balance)  # Add the total loan balance for this month
+            total_loan_balances.append(loan_balance)
 
         df = pd.DataFrame(rows)
 
@@ -100,7 +100,6 @@ if run_sim:
             "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
 
-        # Display the total loan balance as a table
         st.subheader("Total Loan Balance for Each Month")
         total_loan_balance_df = pd.DataFrame({
             "Month": range(months + 1),
@@ -113,7 +112,7 @@ if run_sim:
     else:
         loan_history = []
         active_loans = []
-        total_loan_balances_dca = []  # To track the total loan balance for each month (DCA mode)
+        total_loan_balances_dca = []
 
         for m in range(1, months + 1):
             price = prices[m]
@@ -144,7 +143,6 @@ if run_sim:
             }
             active_loans.append(new_loan)
 
-            # Calculate total loan balance for this month
             total_loan_balance = 0.0
             for loan in active_loans:
                 if m >= loan['start_month']:
@@ -152,7 +150,6 @@ if run_sim:
                     monthly_share_payment = payment / num_active_loans if num_active_loans > 0 else 0.0
 
                     if m == loan['start_month']:
-                        # No payment or interest for the first month of each loan
                         interest = 0.0
                         total_payment = 0.0
                     else:
@@ -162,13 +159,11 @@ if run_sim:
                         loan['loan_balance'] = max(loan['loan_balance'], 0.0)
                         total_payment = loan['payment'] + monthly_share_payment
 
-                    # Summing the loan balances to calculate total loan balance
                     total_loan_balance += loan['loan_balance']
 
                     ltv_percent = loan['loan_balance'] / (loan['btc_collateral'] * price) * 100
                     at_risk = "Yes" if ltv_percent > liq_threshold else "No"
 
-                    # Only add to history if the loan balance is greater than 0
                     if loan['loan_balance'] > 0:
                         loan_history.append({
                             "Month": m,
@@ -180,12 +175,11 @@ if run_sim:
                             "Monthly Payment": total_payment,
                             "LTV %": ltv_percent,
                             "At Risk of Liquidation": at_risk,
-                            "Total Loan Balance (USD)": total_loan_balance  # Show total loan balance for this month
+                            "Total Loan Balance (USD)": total_loan_balance
                         })
 
-            total_loan_balances_dca.append(total_loan_balance)  # Add the total loan balance for DCA mode
+            total_loan_balances_dca.append(total_loan_balance)
 
-        # Remove rows where loan balance is 0 for all loans
         filtered_loan_history = [entry for entry in loan_history if entry['Loan Balance (USD)'] > 0]
 
         dca_df = pd.DataFrame(filtered_loan_history)
@@ -200,7 +194,6 @@ if run_sim:
             "Total Loan Balance (USD)": "${:,.2f}"
         }), use_container_width=True)
 
-        # Display the total loan balance as a table (DCA mode)
         st.subheader("Total Loan Balance for Each Month (DCA Mode)")
         total_loan_balance_df_dca = pd.DataFrame({
             "Month": range(1, months + 1),
