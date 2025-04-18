@@ -114,22 +114,20 @@ if run_sim:
         loan_history = []
         active_loans = []
         total_loan_balances_dca = []
+        monthly_payment_used = []
 
         for m in range(1, months + 1):
             price = prices[m]
 
-            if m == 1:
-                btc_purchased = initial_usd / price
-                collateral_value = initial_usd
-            else:
-                btc_purchased = dca_amount / price
-                collateral_value = dca_amount
+            btc_purchased = dca_amount / price
+            collateral_value = dca_amount
 
             loan_amount = collateral_value * ltv / 100
-            monthly_interest_rate = (interest_rate / 100) / 12
+            monthly_interest_rate = (1 + interest_rate / 100) ** (1 / 12) - 1
 
             remaining_for_payments = loan_amount - income_withdrawal
             remaining_for_payments = max(remaining_for_payments, 0.0)
+            total_payment_made = 0.0
 
             new_loan = {
                 "loan_id": len(active_loans) + 1,
@@ -156,6 +154,7 @@ if run_sim:
                         loan['loan_balance'] += interest - loan['payment'] - monthly_share_payment
                         loan['loan_balance'] = max(loan['loan_balance'], 0.0)
                         total_payment = loan['payment'] + monthly_share_payment
+                        total_payment_made += monthly_share_payment
 
                     total_loan_balance += loan['loan_balance']
 
@@ -177,6 +176,7 @@ if run_sim:
                         })
 
             total_loan_balances_dca.append(total_loan_balance)
+            monthly_payment_used.append(total_payment_made)
 
         filtered_loan_history = [entry for entry in loan_history if entry['Loan Balance (USD)'] > 0]
 
@@ -195,8 +195,10 @@ if run_sim:
         st.subheader("Total Loan Balance for Each Month (DCA Mode)")
         total_loan_balance_df_dca = pd.DataFrame({
             "Month": range(1, months + 1),
-            "Total Loan Balance (USD)": total_loan_balances_dca
+            "Total Loan Balance (USD)": total_loan_balances_dca,
+            "Payment Used (USD)": monthly_payment_used
         })
         st.dataframe(total_loan_balance_df_dca.style.format({
-            "Total Loan Balance (USD)": "${:,.2f}"
+            "Total Loan Balance (USD)": "${:,.2f}",
+            "Payment Used (USD)": "${:,.2f}"
         }), use_container_width=True)
